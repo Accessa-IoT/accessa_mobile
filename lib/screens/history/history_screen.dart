@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:accessa_mobile/services/history_service.dart';
+import 'package:accessa_mobile/utils/date_fmt.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -10,9 +11,12 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   List<Map<String, dynamic>> _items = [];
-  String? _user;
-  String? _device;
-  String? _result;
+
+  // Filtros (inicialmente como solicitado)
+  String? _user = 'Hagliberto';
+  String? _device = 'Laboratório 01';
+  String? _result; // qualquer
+
   bool _loading = true;
 
   @override
@@ -30,74 +34,89 @@ class _HistoryScreenState extends State<HistoryScreen> {
     });
   }
 
-  Future<void> _pickMenu({
-    required Offset offset,
-    required List<String> options,
-    required void Function(String?) onSelect,
-  }) async {
-    final selected = await showMenu<String>(
-      context: context,
-      position: RelativeRect.fromLTRB(offset.dx, offset.dy, offset.dx + 1, offset.dy + 1),
-      items: options
-          .map((e) => PopupMenuItem(value: e, child: Text(e)))
-          .toList()
-        ..insert(0, const PopupMenuItem<String>(value: '', child: Text('— Qualquer —'))),
-    );
-    onSelect(selected == '' ? null : selected);
-  }
+  // ---------- BottomSheet de filtros compactos ----------
+  Future<void> _openFilters() async {
+    String? u = _user;
+    String? d = _device;
+    String? r = _result;
 
-  void _showEventDetail(Map<String, dynamic> e) {
-    showModalBottomSheet(
+    final res = await showModalBottomSheet<Map<String, String?}}>(
       context: context,
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  e['result'] == 'sucesso' ? Icons.check_circle : Icons.error,
-                  color: e['result'] == 'sucesso' ? Colors.green : Colors.red,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${e['device']} • ${e['user']}',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text('Data/Hora: ${(e['when'] as DateTime).toLocal()}'),
-            Text('Resultado: ${e['result']}'),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.copy),
-                  label: const Text('Copiar resumo'),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copiado')));
-                  },
-                ),
-                const SizedBox(width: 8),
-                TextButton.icon(
-                  icon: const Icon(Icons.share),
-                  label: const Text('Compartilhar'),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+      isScrollControlled: true,
+      builder: (_) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16, right: 16, top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Filtros', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String?>(
+                value: u,
+                items: const [
+                  DropdownMenuItem(value: null, child: Text('— Usuário: qualquer —')),
+                  DropdownMenuItem(value: 'Hagliberto', child: Text('Hagliberto')),
+                  DropdownMenuItem(value: 'admin', child: Text('admin')),
+                ],
+                onChanged: (v) => u = v,
+                decoration: const InputDecoration(labelText: 'Usuário'),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String?>(
+                value: d,
+                items: const [
+                  DropdownMenuItem(value: null, child: Text('— Dispositivo: qualquer —')),
+                  DropdownMenuItem(value: 'Laboratório 01', child: Text('Laboratório 01')),
+                  DropdownMenuItem(value: 'Armário 07', child: Text('Armário 07')),
+                ],
+                onChanged: (v) => d = v,
+                decoration: const InputDecoration(labelText: 'Dispositivo'),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String?>(
+                value: r,
+                items: const [
+                  DropdownMenuItem(value: null, child: Text('— Resultado: qualquer —')),
+                  DropdownMenuItem(value: 'sucesso', child: Text('sucesso')),
+                  DropdownMenuItem(value: 'falha', child: Text('falha')),
+                ],
+                onChanged: (v) => r = v,
+                decoration: const InputDecoration(labelText: 'Resultado'),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop<Map<String, String?}}>(context, {'u': null, 'd': null, 'r': null}),
+                    child: const Text('Limpar'),
+                  ),
+                  const Spacer(),
+                  FilledButton.icon(
+                    icon: const Icon(Icons.check),
+                    label: const Text('Aplicar'),
+                    onPressed: () => Navigator.pop<Map<String, String?}}>(context, {'u': u, 'd': d, 'r': r}),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
+
+    if (res != null && mounted) {
+      setState(() {
+        _user = res['u'];
+        _device = res['d'];
+        _result = res['r'];
+      });
+    }
   }
+  // ------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -107,11 +126,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
       final okRes = _result == null || e['result'] == _result;
       return okUser && okDev && okRes;
     }).toList();
+    final count = filtered.length;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Histórico'),
         actions: [
+          Center(child: Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: Text('$count', style: const TextStyle(fontWeight: FontWeight.w600)),
+          )),
+          IconButton(tooltip: 'Filtros', icon: const Icon(Icons.filter_list), onPressed: _openFilters),
           IconButton(onPressed: _reload, icon: const Icon(Icons.refresh)),
         ],
       ),
@@ -119,46 +144,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // Filtros
+                // Barra compacta com resumos dos filtros atuais
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
                   child: Row(
                     children: [
-                      _FilterButton(
-                        label: _user == null ? 'Usuário' : 'Usuário: $_user',
-                        onTap: (pos) => _pickMenu(
-                          offset: pos,
-                          options: const ['Hagliberto', 'admin'],
-                          onSelect: (v) => setState(() => _user = v),
-                        ),
-                      ),
+                      Expanded(child: Text('Usuário: ${_user ?? "qualquer"}', overflow: TextOverflow.ellipsis)),
                       const SizedBox(width: 8),
-                      _FilterButton(
-                        label: _device == null ? 'Dispositivo' : 'Dispositivo: $_device',
-                        onTap: (pos) => _pickMenu(
-                          offset: pos,
-                          options: const ['Laboratório 01', 'Armário 07'],
-                          onSelect: (v) => setState(() => _device = v),
-                        ),
-                      ),
+                      Expanded(child: Text('Dispositivo: ${_device ?? "qualquer"}', overflow: TextOverflow.ellipsis)),
                       const SizedBox(width: 8),
-                      _FilterButton(
-                        label: _result == null ? 'Resultado' : 'Resultado: $_result',
-                        onTap: (pos) => _pickMenu(
-                          offset: pos,
-                          options: const ['sucesso', 'falha'],
-                          onSelect: (v) => setState(() => _result = v),
-                        ),
-                      ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () => setState(() => {_user = null, _device = null, _result = null}),
-                        child: const Text('Limpar filtros'),
-                      )
+                      Expanded(child: Text('Resultado: ${_result ?? "qualquer"}', overflow: TextOverflow.ellipsis)),
                     ],
                   ),
                 ),
-                const Divider(),
+                const Divider(height: 1),
                 Expanded(
                   child: ListView.separated(
                     itemCount: filtered.length,
@@ -166,43 +165,41 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     itemBuilder: (_, i) {
                       final e = filtered[i];
                       final ok = e['result'] == 'sucesso';
+                      final when = fmtDateTime(e['when'] as DateTime);
                       return ListTile(
                         leading: Icon(ok ? Icons.check_circle : Icons.error, color: ok ? Colors.green : Colors.red),
                         title: Text('${e['device']} • ${e['user']}'),
-                        subtitle: Text('${e['result']} • ${(e['when'] as DateTime).toLocal()}'),
+                        subtitle: Text('${e['result']} • $when'),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => _showEventDetail(e),
+                        onTap: () => showModalBottomSheet(
+                          context: context,
+                          builder: (_) => Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(ok ? Icons.check_circle : Icons.error, color: ok ? Colors.green : Colors.red),
+                                    const SizedBox(width: 8),
+                                    Text('${e['device']} • ${e['user']}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text('Data/Hora: $when'),
+                                Text('Resultado: ${e['result']}'),
+                                const SizedBox(height: 8),
+                              ],
+                            ),
+                          ),
+                        ),
                       );
                     },
                   ),
                 ),
               ],
             ),
-    );
-  }
-}
-
-class _FilterButton extends StatefulWidget {
-  final String label;
-  final void Function(Offset globalPosition) onTap;
-  const _FilterButton({required this.label, required this.onTap});
-
-  @override
-  State<_FilterButton> createState() => _FilterButtonState();
-}
-
-class _FilterButtonState extends State<_FilterButton> {
-  final _key = GlobalKey();
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton(
-      key: _key,
-      onPressed: () {
-        final box = _key.currentContext!.findRenderObject() as RenderBox;
-        final pos = box.localToGlobal(Offset.zero);
-        widget.onTap(Offset(pos.dx, pos.dy + box.size.height));
-      },
-      child: Text(widget.label),
     );
   }
 }

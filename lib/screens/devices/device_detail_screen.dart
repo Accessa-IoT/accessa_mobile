@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:accessa_mobile/services/history_service.dart';
 import 'package:accessa_mobile/services/auth_service.dart';
+import 'package:accessa_mobile/utils/date_fmt.dart';
 
 class DeviceDetailScreen extends StatefulWidget {
   final String deviceId;
@@ -26,9 +27,10 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
   Future<void> _openLock() async {
     setState(() => _busy = true);
     await Future.delayed(const Duration(seconds: 1)); // simula request
+    final nowStr = fmtDateTime(DateTime.now());
     setState(() {
       _busy = false;
-      _lastStatus = 'Sucesso • ${DateTime.now().toLocal()}';
+      _lastStatus = 'Sucesso • $nowStr';
     });
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(

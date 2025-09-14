@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:accessa_mobile/utils/date_fmt.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -8,7 +9,6 @@ class AdminScreen extends StatefulWidget {
 }
 
 class _AdminScreenState extends State<AdminScreen> {
-  // Mock: regras de permissão e chaves
   final List<_Rule> _rules = [];
   final List<_KeyItem> _keys = [
     _KeyItem(deviceId: 'dev-101', maskedKey: '••••abcd', lastRotation: DateTime(2025, 9, 1)),
@@ -142,7 +142,7 @@ class _KeysTabState extends State<_KeysTab> {
           ListTile(
             leading: const Icon(Icons.vpn_key),
             title: Text(k.deviceId),
-            subtitle: Text('Chave: ${k.maskedKey}  |  Última rotação: ${k.lastRotation.toIso8601String().split("T").first}'),
+            subtitle: Text('Chave: ${k.maskedKey}  |  Última rotação: ${fmtDateTime(k.lastRotation)}'),
             trailing: PopupMenuButton<String>(
               onSelected: (a) => _menuAction(a, k),
               itemBuilder: (_) => const [
