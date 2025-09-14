@@ -26,27 +26,66 @@ O app permite autenticação segura, abertura de dispositivos e monitoramento de
 
 ## 🛠️ Instalação e Execução
 
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/seu-usuario/projeto-mobile.git
-   cd projeto-mobile
-   ```
+### 1. Pré-requisitos
+- **Flutter SDK** instalado (versão 3.0 ou superior).  
+- **Dart SDK** já incluído no Flutter.  
+- Dispositivo Android/iOS ou emulador configurado.  
+- (Opcional) Backend e broker MQTT rodando para integração completa.  
 
-2. Instale as dependências:
-   ```bash
-   flutter pub get
-   ```
+Verifique a instalação do Flutter:
+```bash
+flutter doctor
+```
 
-3. Execute o projeto em um dispositivo ou emulador:
-   ```bash
-   flutter run
-   ```
+### 2. Clonando o repositório
+```bash
+git clone https://github.com/seu-usuario/projeto-mobile.git
+cd projeto-mobile
+```
 
-4. Para rodar em plataforma específica:
-   ```bash
-   flutter run -d android
-   flutter run -d ios
-   ```
+### 3. Instalando dependências
+```bash
+flutter pub get
+```
+
+### 4. Executando o app
+- **Execução padrão (detecta o dispositivo/emulador disponível):**
+  ```bash
+  flutter run
+  ```
+
+- **Forçar execução em plataforma específica:**
+  ```bash
+  flutter run -d android   # Em um dispositivo Android/emulador
+  flutter run -d ios       # Em um dispositivo iOS/simulador
+  flutter run -d web       # Executar no navegador (se habilitado)
+  ```
+
+### 5. Exemplos de uso
+- **Executar em modo debug (com hot reload):**
+  ```bash
+  flutter run --debug
+  ```
+
+- **Executar em modo release (otimizado, sem debug banner):**
+  ```bash
+  flutter run --release
+  ```
+
+- **Gerar build APK (Android):**
+  ```bash
+  flutter build apk --release
+  ```
+
+- **Gerar build AppBundle (Android, para Play Store):**
+  ```bash
+  flutter build appbundle --release
+  ```
+
+- **Gerar build para iOS (necessário macOS + Xcode):**
+  ```bash
+  flutter build ios --release
+  ```
 
 ---
 
@@ -105,4 +144,4 @@ fix(api): corrige timeout na chamada de abertura de porta
 ---
 
 ## 📖 Licença
-Este projeto é acadêmico e faz parte do **Projeto Integrador II** do curso de **Tecnologia em Sistemas para Internet (IFRN)**.  
+Este projeto é acadêmico e faz parte do **Projeto Integrador II** do curso de **Tecnologia em Sistemas para Internet (IFRN)**.
