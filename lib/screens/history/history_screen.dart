@@ -12,7 +12,7 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   List<Map<String, dynamic>> _items = [];
 
-  // Filtros (inicialmente como solicitado)
+  // Filtros (inicial)
   String? _user = 'Hagliberto';
   String? _device = 'Laboratório 01';
   String? _result; // qualquer
@@ -34,13 +34,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     });
   }
 
-  // ---------- BottomSheet de filtros compactos ----------
+  // ---------- BottomSheet de filtros (compacto, sem nulos no Dropdown) ----------
   Future<void> _openFilters() async {
-    String? u = _user;
-    String? d = _device;
-    String? r = _result;
+    String u = _user ?? '';
+    String d = _device ?? '';
+    String r = _result ?? '';
 
-    final res = await showModalBottomSheet<Map<String, String?}}>(
+    final Map<String, String>? res = await showModalBottomSheet<Map<String, String>>(
       context: context,
       isScrollControlled: true,
       builder: (_) {
@@ -55,50 +55,50 @@ class _HistoryScreenState extends State<HistoryScreen> {
             children: [
               const Text('Filtros', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String?>(
+              DropdownButtonFormField<String>(
                 value: u,
                 items: const [
-                  DropdownMenuItem(value: null, child: Text('— Usuário: qualquer —')),
-                  DropdownMenuItem(value: 'Hagliberto', child: Text('Hagliberto')),
-                  DropdownMenuItem(value: 'admin', child: Text('admin')),
+                  DropdownMenuItem<String>(value: '', child: Text('— Usuário: qualquer —')),
+                  DropdownMenuItem<String>(value: 'Hagliberto', child: Text('Hagliberto')),
+                  DropdownMenuItem<String>(value: 'admin', child: Text('admin')),
                 ],
-                onChanged: (v) => u = v,
+                onChanged: (v) => u = v ?? '',
                 decoration: const InputDecoration(labelText: 'Usuário'),
               ),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String?>(
+              DropdownButtonFormField<String>(
                 value: d,
                 items: const [
-                  DropdownMenuItem(value: null, child: Text('— Dispositivo: qualquer —')),
-                  DropdownMenuItem(value: 'Laboratório 01', child: Text('Laboratório 01')),
-                  DropdownMenuItem(value: 'Armário 07', child: Text('Armário 07')),
+                  DropdownMenuItem<String>(value: '', child: Text('— Dispositivo: qualquer —')),
+                  DropdownMenuItem<String>(value: 'Laboratório 01', child: Text('Laboratório 01')),
+                  DropdownMenuItem<String>(value: 'Armário 07', child: Text('Armário 07')),
                 ],
-                onChanged: (v) => d = v,
+                onChanged: (v) => d = v ?? '',
                 decoration: const InputDecoration(labelText: 'Dispositivo'),
               ),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String?>(
+              DropdownButtonFormField<String>(
                 value: r,
                 items: const [
-                  DropdownMenuItem(value: null, child: Text('— Resultado: qualquer —')),
-                  DropdownMenuItem(value: 'sucesso', child: Text('sucesso')),
-                  DropdownMenuItem(value: 'falha', child: Text('falha')),
+                  DropdownMenuItem<String>(value: '', child: Text('— Resultado: qualquer —')),
+                  DropdownMenuItem<String>(value: 'sucesso', child: Text('sucesso')),
+                  DropdownMenuItem<String>(value: 'falha', child: Text('falha')),
                 ],
-                onChanged: (v) => r = v,
+                onChanged: (v) => r = v ?? '',
                 decoration: const InputDecoration(labelText: 'Resultado'),
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.pop<Map<String, String?}}>(context, {'u': null, 'd': null, 'r': null}),
+                    onPressed: () => Navigator.pop<Map<String, String>>(context, {'u': '', 'd': '', 'r': ''}),
                     child: const Text('Limpar'),
                   ),
                   const Spacer(),
                   FilledButton.icon(
                     icon: const Icon(Icons.check),
                     label: const Text('Aplicar'),
-                    onPressed: () => Navigator.pop<Map<String, String?}}>(context, {'u': u, 'd': d, 'r': r}),
+                    onPressed: () => Navigator.pop<Map<String, String>>(context, {'u': u, 'd': d, 'r': r}),
                   ),
                 ],
               ),
@@ -110,13 +110,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     if (res != null && mounted) {
       setState(() {
-        _user = res['u'];
-        _device = res['d'];
-        _result = res['r'];
+        _user = (res['u'] ?? '').isEmpty ? null : res['u'];
+        _device = (res['d'] ?? '').isEmpty ? null : res['d'];
+        _result = (res['r'] ?? '').isEmpty ? null : res['r'];
       });
     }
   }
-  // ------------------------------------------------------
+  // -----------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -132,10 +132,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
       appBar: AppBar(
         title: const Text('Histórico'),
         actions: [
-          Center(child: Padding(
-            padding: const EdgeInsets.only(right: 4),
-            child: Text('$count', style: const TextStyle(fontWeight: FontWeight.w600)),
-          )),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Text('$count', style: const TextStyle(fontWeight: FontWeight.w600)),
+            ),
+          ),
           IconButton(tooltip: 'Filtros', icon: const Icon(Icons.filter_list), onPressed: _openFilters),
           IconButton(onPressed: _reload, icon: const Icon(Icons.refresh)),
         ],
@@ -144,7 +146,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // Barra compacta com resumos dos filtros atuais
+                // Resumo compacto dos filtros ativos
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
                   child: Row(
