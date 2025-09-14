@@ -23,7 +23,7 @@ class AccessaApp extends StatelessWidget {
     final logged = AuthService.isLoggedIn();
 
     return MaterialApp(
-      title: 'Accessa',
+      title: '🔐 Accessa',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
