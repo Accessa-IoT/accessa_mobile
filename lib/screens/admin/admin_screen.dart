@@ -60,7 +60,7 @@ class _UsersTab extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       children: const [
         ListTile(leading: Icon(Icons.person), title: Text('Hagliberto'), subtitle: Text('admin')),
-        ListTile(leading: Icon(Icons.person_outline), title: Text('mikael'), subtitle: Text('usuário')),
+        ListTile(leading: Icon(Icons.person_outline), title: Text('Victor'), subtitle: Text('usuário')),
       ],
     );
   }
