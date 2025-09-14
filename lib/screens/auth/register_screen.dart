@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:accessa_mobile/services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -12,6 +13,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  bool _loading = false;
 
   @override
   void dispose() {
@@ -21,10 +23,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: chamar API de cadastro
-      Navigator.pop(context); // volta pro login/home
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+    try {
+      await AuthService.register(_name.text, _email.text, _password.text);
+      if (!mounted) return;
+      // entra direto no app após cadastro
+      Navigator.of(context).pushNamedAndRemoveUntil('/devices', (route) => false);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -43,18 +53,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 labelText: 'Nome completo',
                 prefixIcon: Icon(Icons.person),
               ),
-              validator: (v) =>
-                  (v == null || v.isEmpty) ? 'Informe seu nome' : null,
+              validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe seu nome' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _email,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
                 labelText: 'E-mail',
                 prefixIcon: Icon(Icons.email),
               ),
-              validator: (v) =>
-                  (v == null || v.isEmpty) ? 'Informe seu e-mail' : null,
+              validator: (v) {
+                final s = (v ?? '').trim();
+                if (s.isEmpty) return 'Informe seu e-mail';
+                if (!s.contains('@') || !s.contains('.')) return 'E-mail inválido';
+                return null;
+              },
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -64,14 +78,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 labelText: 'Senha',
                 prefixIcon: Icon(Icons.lock),
               ),
-              validator: (v) =>
-                  (v == null || v.length < 6) ? 'Mínimo 6 caracteres' : null,
+              validator: (v) => (v == null || v.length < 6) ? 'Mínimo 6 caracteres' : null,
             ),
             const SizedBox(height: 20),
             FilledButton.icon(
-              icon: const Icon(Icons.check),
-              label: const Text('Cadastrar'),
-              onPressed: _submit,
+              icon: _loading
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.check),
+              label: Text(_loading ? 'Cadastrando...' : 'Cadastrar'),
+              onPressed: _loading ? null : _submit,
             ),
           ],
         ),

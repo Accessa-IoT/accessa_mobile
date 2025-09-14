@@ -29,8 +29,8 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await AuthService.login(_email.text.trim(), _password.text, remember: _remember);
       if (!mounted) return;
-      // replace: evita voltar p/ login
-      Navigator.pushReplacementNamed(context, '/devices');
+      // 🔒 garante que não volta para login/home após autenticado
+      Navigator.of(context).pushNamedAndRemoveUntil('/devices', (route) => false);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
