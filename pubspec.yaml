@@ -34,10 +34,13 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.1    
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -87,3 +90,43 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+
+# ── ÍCONES DO APP ───────────────────────────────────────────────────────────────
+flutter_launcher_icons:
+  # Gera ícones para todas as plataformas suportadas
+  android: true
+  ios: true
+  web:
+    generate: true
+    image_path: assets/icone/icone.gif
+  windows:
+    generate: true
+    image_path: assets/icone/icone.gif
+  macos:
+    generate: true
+    image_path: assets/icone/icone.gif
+  linux:
+    generate: true
+    image_path: assets/icone/icone.gif
+
+  # Caminhos padrão (separados por plataforma se quiser customizar)
+  image_path: assets/icone/icone.gif
+  # Ícones adaptativos (Android 8+). Ajuste a cor de fundo se quiser.
+  adaptive_icon_foreground: assets/icone/icone.gif
+  adaptive_icon_background: "#FFFFFF"
+  # Android 13+: ícone monocromático (opcional, fica bonito no tema dinâmico)
+  adaptive_icon_monochrome: assets/icone/icone.gif
+  # iOS: imagens sem canal alpha na camada final
+  remove_alpha_ios: true
+
+# ── SPLASH SCREEN (tira o "F" do Flutter) ──────────────────────────────────────
+flutter_native_splash:
+  color: "#FFFFFF"             # cor de fundo do splash
+  image: assets/icone/icone.gif
+  android: true
+  ios: true
+  web: true
+  android_12:
+    image: assets/icone/icone.gif
+    color: "#FFFFFF"
