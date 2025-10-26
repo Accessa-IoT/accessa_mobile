@@ -145,3 +145,44 @@ fix(api): corrige timeout na chamada de abertura de porta
 
 ## 📖 Licença
 Este projeto é acadêmico e faz parte do **Projeto Integrador II** do curso de **Tecnologia em Sistemas para Internet (IFRN)**.
+
+---
+
+## 🌐 Deploy no GitHub Pages (com `deploy.ps1`)
+
+Este repositório inclui um script de deploy que publica a versão **Flutter Web** no GitHub Pages usando **worktree**.
+
+### Pré‑requisitos
+- `git` e `flutter` no `PATH`
+- Permissões de **GitHub Pages** habilitadas no repositório
+- (Opcional) habilitar scripts por sessão no PowerShell:
+  ```powershell
+  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+  ```
+
+### Passo a passo
+1. Gere a build Web com base correta e sem service worker (o script faz isso automaticamente):
+   ```powershell
+   .\deploy.ps1
+   ```
+   O script irá:
+   - rodar `flutter build web --release --base-href "/<nome_do_repo>/" --pwa-strategy=none`;
+   - criar/atualizar uma **worktree** em `..\_site` para a branch `gh-pages`;
+   - copiar os artefatos da build preservando o `.git`;
+   - criar `404.html` e `.nojekyll`;
+   - fazer `git commit` e `git push` para `origin/gh-pages`;
+   - exibir a URL final (ex.: `https://<Owner>.github.io/<Repo>/`).
+
+2. Confirme em **Settings → Pages** se a fonte está como **gh-pages / (root)**.
+
+### Opções úteis
+```powershell
+.\deploy.ps1 -SkipClean                          # mais rápido (não roda flutter clean)
+.\deploy.ps1 -Branch gh-pages -WorktreePath ..\_site
+.\deploy.ps1 -RepoName accessa_mobile -Owner Accessa-IoT
+```
+
+### Troubleshooting
+- **Página desatualizada:** faça *hard reload* (**Ctrl+Shift+R**) ou, nas DevTools → *Application* → *Service Workers*, clique **Unregister**.
+- **404 em assets (manifest, favicon, flutter_bootstrap.js):** gere a build com o `--base-href` correto (`"/<repo>/"`). Para domínio customizado, use `"/"`.
+- **Deploy falhou:** verifique se a branch `gh-pages` existe no remoto e se o script conseguiu criar a worktree.
