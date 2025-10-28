@@ -1,178 +1,182 @@
 # 🌐 Guia de Publicação no GitHub Pages — Accessa (Flutter Web)
 
-Este guia explica **como publicar e manter** a versão Web do Accessa no **GitHub Pages**, com build via **Flutter Web** e deploy automático por **GitHub Actions**.
+Este documento orienta o processo completo de **publicação e manutenção da versão Web** do projeto **Accessa**, utilizando **Flutter Web**, **GitHub Actions** e **GitHub Pages**.  
+Inclui instruções para builds locais, produção, domínio customizado e troubleshooting.
 
 ---
 
 ## ✅ Visão Geral
 
-Existem dois fluxos principais:
-1) **Local (teste rápido)** — build com `base-href="/"` e servidor local.
-2) **Produção (GitHub Pages)** — build com `base-href="/NOME_DO_REPO/"` e deploy para o branch `gh-pages` (automatizado pelo Actions).
+O Accessa Web pode ser executado em dois fluxos principais:
 
-> Se você usa **domínio customizado** (CNAME), o `base-href` deve ser `/`.
+| Fluxo | Descrição |
+|--------|------------|
+| 🧪 **Local (teste rápido)** | Build com `base-href="/"`, executado em servidor local. |
+| 🚀 **Produção (GitHub Pages)** | Build com `base-href="/NOME_DO_REPO/"` e deploy automático para o branch `gh-pages`. |
+
+> Se for usado **domínio customizado** (CNAME), o `base-href` deve ser `/`.
 
 ---
 
-## 🔧 Pré‑requisitos
+## 🔧 Pré-requisitos
 
-- Flutter instalado e com Web habilitado:
+- Flutter instalado e com suporte Web habilitado:
   ```bash
   flutter --version
   flutter config --enable-web
   ```
-- Repositório no GitHub com permissões de **GitHub Actions** e **Pages**.
+- Repositório hospedado no GitHub com **GitHub Actions** e **GitHub Pages** ativados.
 
 ---
 
-## 🧪 Fluxo Local (desenvolvimento/teste)
+## 🧪 Execução Local (Desenvolvimento/Teste)
 
-Use o script: `build_local.cmd` (Windows) — gera build com `base-href="/"` e sobe um servidor local.
+Use o script `build_local.cmd` para gerar o build com `base-href="/"` e iniciar um servidor local.
 
 ```powershell
-.uild_local.cmd
-# abrirá http://localhost:8080/
+.\build_local.cmd
+# abrirá em http://localhost:8080/
 ```
 
-Alternativa via Flutter:
+Ou alternativamente via Flutter:
 ```bash
 flutter run -d web-server --web-port 8080
 ```
 
 ---
 
-## 🚀 Fluxo Produção (GitHub Pages)
+## 🚀 Publicação em Produção (GitHub Pages)
 
-### 1) Build Web com base-href do repositório
-Use o script: `build_pages.cmd` (detecta o nome da pasta como NOME_DO_REPO):
+### 1️⃣ Build com base-href do repositório
+O script `build_pages.cmd` detecta automaticamente o nome da pasta como `NOME_DO_REPO`:
 ```powershell
-.uild_pages.cmd
+.\build_pages.cmd
 # ou explicitamente:
-.uild_pages.cmd accessa_mobile
+.\build_pages.cmd accessa_mobile
 ```
 
-### 2) Deploy automático com GitHub Actions
-O workflow `deploy_pages.yml` (em `.github/workflows/`) faz:
-- Checkout + setup Flutter
-- `flutter build web --release --base-href="/<NOME_DO_REPO>/"`
-- Copia `index.html` → `404.html` (SPA routing)
-- Publica `build/web/` no branch **`gh-pages`**
+### 2️⃣ Deploy automático via GitHub Actions
+O workflow `deploy_pages.yml` (em `.github/workflows/`) realiza:
+- Checkout e setup do Flutter;
+- Build Web com `flutter build web --release --base-href="/<NOME_DO_REPO>/"`;
+- Criação do `404.html` para rotas SPA;
+- Publicação de `build/web/` no branch **`gh-pages`**.
 
-> Ele roda em **push** na branch `feat/tela-inicial` e também pode ser disparado manualmente (**workflow_dispatch**).
+> O deploy é acionado a cada **push** na branch de origem configurada (ex.: `feat/tela-inicial`) ou manualmente via **workflow_dispatch**.
 
-### 3) Habilitar o GitHub Pages (uma única vez)
-No GitHub do repositório:
-- **Settings → Pages**  
-  - *Source:* **Deploy from a branch**  
-  - *Branch:* **gh-pages** / **root**  
-- Salve. A URL será algo como:
+### 3️⃣ Habilitar o GitHub Pages (primeira vez)
+No repositório GitHub:
+- Vá em **Settings → Pages**
+- Configure:
+  - **Source:** *Deploy from a branch*
+  - **Branch:** *gh-pages / root*
+- Após salvar, o site ficará disponível em:
   ```
   https://<SEU_USUARIO>.github.io/<NOME_DO_REPO>/
   ```
 
 ---
 
-## 🌍 Domínio customizado (CNAME)
+## 🌍 Domínio Customizado (CNAME)
 
-Se for usar um domínio próprio (ex.: `accessa.suaempresa.com`):
-1. Crie o arquivo `CNAME` contendo apenas o domínio:
+Para usar um domínio próprio (ex.: `accessa.exemplo.com`):
+
+1. Crie o arquivo `CNAME` com o domínio:
+   ```text
+   accessa.exemplo.com
    ```
-   accessa.suaempresa.com
+
+2. Gere o CNAME automaticamente (opcional):
+   ```yaml
+   - name: Criar CNAME
+     run: echo accessa.exemplo.com > build/web/CNAME
    ```
-2. Para **deploy automático**, você pode:
-   - **Opção A (Workflow):** gerar o `CNAME` dentro de `build/web` antes do passo de deploy (adicionar um passo `run: echo accessa.suaempresa.com > build/web/CNAME`).  
-   - **Opção B (Pages Settings):** definir o domínio em **Settings → Pages → Custom domain** (o Pages cria o `CNAME` automaticamente).
-3. **Altere o base-href para `/`** nos builds destinados ao domínio customizado:
+
+3. Ajuste o comando de build para `base-href="/"`:
    ```bash
    flutter build web --release --base-href="/"
    ```
+
+> Também é possível definir o domínio diretamente nas configurações do Pages (**Settings → Pages → Custom domain**).
 
 ---
 
 ## 🧭 Roteamento SPA (404.html)
 
-Aplicações Flutter Web funcionam como SPA. No Pages, quando você acessa uma rota “profunda” (ex.: `/devices`), o servidor tenta servir `/devices/index.html`.  
-Para evitar 404, copie `index.html` para `404.html`:
+Por padrão, o GitHub Pages tenta buscar um arquivo físico para cada rota, o que causa erros 404.  
+Para corrigir isso, copie o arquivo `index.html` para `404.html`:
+
 ```bash
 # já automatizado no workflow
 cp build/web/index.html build/web/404.html
 ```
-Assim, o Pages entrega `404.html` (que é o app) e o Flutter cuida do roteamento.
+
+Assim, qualquer rota retorna o app Flutter (Single Page Application).
 
 ---
 
-## 🛠️ Troubleshooting
+## 🛠️ Solução de Problemas (Troubleshooting)
 
-### 1) **404 em assets (flutter_bootstrap.js / manifest.json / favicon)**
-- Causa: `base-href` incorreto.  
-- Solução: verifique a tag `<base href="...">` no `build/web/index.html`.
-  - Para **localhost** → use `/`
-  - Para **GitHub Pages** (repo padrão) → use `/<NOME_DO_REPO>/`
-  - Para **domínio customizado** → use `/`
-
-### 2) Página abre mas fica “em branco”
-- Limpe cache/Service Worker do navegador (DevTools → Application → Service Workers → *Unregister*).
-- Faça `flutter clean` e gere um novo build web.
-- Verifique erros no console (DevTools → Console).
-
-### 3) Erro de conteúdo misto (Mixed Content)
-- Se o app for servido por **HTTPS**, recursos externos (APIs, MQTT-over-WebSocket) também precisam ser **HTTPS/WSS**.
-
-### 4) Build certo, mas URL errada
-- Confirme a URL final do Pages em **Settings → Pages**.
-- Se renomear o repositório, gere novo build com o `base-href` atualizado.
-
-### 5) Deploy não dispara
-- Confirme se o push foi na branch monitorada pelo workflow (ex.: `feat/tela-inicial`).  
-- Rode manualmente em **Actions → Deploy Flutter Web to GitHub Pages → Run workflow**.
+| Problema | Causa Provável | Solução |
+|-----------|----------------|----------|
+| **404 em assets (flutter_bootstrap.js, manifest.json, favicon)** | `base-href` incorreto | Corrigir a tag `<base href>` no `index.html`. Use `/` (local) ou `/<NOME_DO_REPO>/` (GitHub Pages). |
+| **Página em branco após deploy** | Cache antigo ou Service Worker obsoleto | Limpar cache → *DevTools → Application → Service Workers → Unregister*. |
+| **Erro Mixed Content (conteúdo inseguro)** | Recursos externos usando HTTP em vez de HTTPS | Garanta que tudo use HTTPS/WSS. |
+| **URL incorreta após rename do repositório** | `base-href` desatualizado | Rebuild com novo nome do repositório. |
+| **Deploy não acionado** | Push fora da branch monitorada | Enviar para a branch correta ou acionar manualmente em *Actions*. |
 
 ---
 
-## 🧹 Limpeza de cache/Service Worker
-Se ocorrer comportamento antigo após publicar uma nova versão:
-1. `flutter clean`
-2. `flutter build web ...`
-3. No navegador: DevTools → Application → *Unregister* Service Worker → Hard Reload
+## 🧹 Limpeza de Cache / Service Worker
+
+Quando ocorrer comportamento inconsistente após um novo deploy:
+1. Execute `flutter clean`;
+2. Gere o build novamente;
+3. No navegador: *DevTools → Application → Unregister Service Worker → Hard Reload*.
 
 ---
 
-## 🧪 Verificação final (checklist)
+## 🧪 Checklist Final
 
-- [ ] `flutter config --enable-web` feito
-- [ ] Build local funciona com `base-href="/"`
-- [ ] Workflow `deploy_pages.yml` está em `.github/workflows/`
-- [ ] Pages habilitado para o branch `gh-pages`
-- [ ] (Opcional) `CNAME` configurado e `base-href="/"` para domínio customizado
-- [ ] URL final testada em aba anônima
+- [x] `flutter config --enable-web` executado  
+- [x] Build local validado (`base-href="/"`)  
+- [x] Workflow `deploy_pages.yml` criado  
+- [x] GitHub Pages habilitado (`gh-pages`)  
+- [x] CNAME configurado (se aplicável)  
+- [x] URL final testada em aba anônima  
 
 ---
 
-## 🔗 Referência de comandos
+## 🔗 Referência Rápida de Comandos
 
-Local:
+### Execução local:
 ```bash
 flutter build web --release --base-href="/"
 python -m http.server -d build/web 8080
 ```
 
-GitHub Pages (repo padrão):
+### Publicação padrão (repositório GitHub):
 ```bash
 flutter build web --release --base-href="/NOME_DO_REPO/"
 ```
 
-Domínio customizado:
+### Domínio customizado:
 ```bash
 flutter build web --release --base-href="/"
-echo accessa.suaempresa.com > build/web/CNAME
+echo accessa.exemplo.com > build/web/CNAME
 ```
 
 ---
 
-## 📌 Observações de segurança
+## 🔒 Observações de Segurança
 
-- GitHub Pages serve **conteúdo estático**; **não** exponha segredos ou tokens no front-end.
-- Para integrações (API/MQTT), use endpoints HTTPS/WSS e cuide de CORS.
+- O GitHub Pages serve apenas **conteúdo estático** — não armazene senhas, chaves ou tokens.
+- Todas as comunicações com o broker MQTT devem usar **WSS (WebSocket Secure)**.
+- APIs e endpoints externos devem estar sob **HTTPS** para evitar bloqueios de navegador.
 
 ---
 
-**Pronto!** Seu pipeline está preparado para publicar o Accessa no GitHub Pages de forma consistente e reproduzível. ✅
+## ✅ Conclusão
+
+O pipeline de publicação do **Accessa Web** está preparado para **builds reproduzíveis, automação completa de deploy e compatibilidade com HTTPS/WSS**.  
+Seguindo este guia, é possível garantir uma implantação confiável e segura tanto em **GitHub Pages** quanto em **domínios personalizados**.
