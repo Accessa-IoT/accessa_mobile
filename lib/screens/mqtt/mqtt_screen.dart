@@ -1,25 +1,27 @@
-
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
+
 import '../../services/mqtt_service.dart';
 import '../../services/mqtt_config.dart';
 
-class DeviceDetailScreen extends StatefulWidget {
-  final Map<String, String> device;
-  const DeviceDetailScreen({super.key, required this.device});
+class MqttScreen extends StatefulWidget {
+  const MqttScreen({super.key});
 
   @override
-  State<DeviceDetailScreen> createState() => _DeviceDetailScreenState();
+  State<MqttScreen> createState() => _MqttScreenState();
 }
 
-class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
-  final mqtt = MqttService();
-  String status = 'Desconhecido';
+class _MqttScreenState extends State<MqttScreen> {
+  final svc = MqttService();
   final List<String> log = [];
+  String portaStatus = 'Desconhecido';
   bool loading = false;
   StreamSubscription? _sub;
+
+  String get _modeLabel => kIsWeb ? 'WS 8884' : 'TLS 8883';
 
   @override
   void initState() {
@@ -31,18 +33,22 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
     if (!mounted) return;
     setState(() => loading = true);
     try {
-      await mqtt.connect();
-      final base = '${MqttConfig.baseTopic}/${widget.device["id"]}';
-      await mqtt.subscribe('$base/#');
-      _sub?.cancel();
-      _sub = mqtt.messages.listen(_onMessage);
-      _addLog('✅ Conectado ao HiveMQ Cloud');
-    } catch (e) {
-      _addLog('❌ Falha na conexão: $e');
+      await svc.connect();
+      await svc.subscribe('${MqttConfig.baseTopic}/porta01/#');
+      await _sub?.cancel();
+      _sub = svc.messages.listen(_onMessage);
+      _addLog('✅ Conectado (${_modeLabel}) ao ${MqttConfig.host}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro MQTT: $e')),
+          SnackBar(content: Text('MQTT conectado (${_modeLabel}).')),
         );
+      }
+    } catch (e) {
+      _addLog('❌ Erro ao conectar: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Falha na conexão: $e')));
       }
     } finally {
       if (mounted) setState(() => loading = false);
@@ -53,11 +59,14 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
     if (!mounted) return;
     final topic = evt.topic;
     final MqttPublishMessage recMess = evt.payload as MqttPublishMessage;
-    final payload = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+    final payload = MqttPublishPayload.bytesToStringAsString(
+      recMess.payload.message,
+    );
+
     _addLog('📩 [$topic] $payload');
 
     if (topic.endsWith('/status')) {
-      setState(() => status = payload);
+      setState(() => portaStatus = payload);
     } else if (topic.endsWith('/log')) {
       try {
         final data = jsonDecode(payload);
@@ -70,20 +79,20 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
 
   Future<void> _enviarComando(String comando) async {
     try {
-      final topic = '${MqttConfig.baseTopic}/${widget.device["id"]}/comando';
-      await mqtt.publishString(topic, comando);
+      final topic = '${MqttConfig.baseTopic}/porta01/comando';
+      await svc.publishString(topic, comando);
       _addLog('📤 Enviado: $comando');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Comando enviado: $comando')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Comando enviado: $comando')));
       }
     } catch (e) {
       _addLog('❌ Falha ao enviar: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Falha ao enviar: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Falha ao enviar: $e')));
       }
     }
   }
@@ -96,16 +105,15 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
   @override
   void dispose() {
     _sub?.cancel();
-    mqtt.disconnect();
+    svc.disconnect();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final device = widget.device;
     return Scaffold(
       appBar: AppBar(
-        title: Text(device['name'] ?? 'Detalhe'),
+        title: const Text('Controle de Acesso (MQTT)'),
         centerTitle: true,
         actions: [
           IconButton(
@@ -113,31 +121,63 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
             tooltip: 'Reconectar',
             onPressed: loading ? null : _connect,
           ),
+          IconButton(
+            icon: const Icon(Icons.health_and_safety),
+            tooltip: 'Diagnóstico MQTT',
+            onPressed: () => Navigator.pushNamed(context, '/mqtt_diag'),
+          ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // 🔖 Etiqueta de modo + host (debug)
+            Row(
+              children: [
+                Chip(
+                  label: Text('Modo: ${_modeLabel.toUpperCase()}'),
+                  avatar: const Icon(Icons.network_check),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Host: ${MqttConfig.host}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: ListTile(
                 leading: const Icon(Icons.door_front_door, size: 40),
-                title: Text(device['name'] ?? 'Dispositivo'),
-                subtitle: Text('Status atual: $status'),
+                title: const Text(
+                  'Porta 01',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text('Status atual: $portaStatus'),
                 trailing: Icon(
-                  status.toLowerCase().contains('aberta')
+                  portaStatus.toLowerCase().contains('aberta')
                       ? Icons.lock_open
                       : Icons.lock_outline,
-                  color: status.toLowerCase().contains('aberta')
+                  color: portaStatus.toLowerCase().contains('aberta')
                       ? Colors.green
                       : Colors.red,
-                  size: 30,
+                  size: 28,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+
+            const SizedBox(height: 12),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -153,12 +193,17 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+
+            const SizedBox(height: 16),
             const Align(
               alignment: Alignment.centerLeft,
-              child: Text('📜 Log de Acesso', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(
+                '📜 Log de Eventos',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
             const SizedBox(height: 8),
+
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(8),
