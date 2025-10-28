@@ -18,9 +18,12 @@ class HistoryService {
     final list = (data ?? _seed());
     // normaliza DateTime
     return list
-        .map((e) => {
-              ...Map<String, dynamic>.from(e as Map),
-              'when': DateTime.parse((e as Map)['when'] as String),
+        .map((e) {
+              final m = Map<String, dynamic>.from(e as Map);
+              return {
+                ...m,
+                'when': DateTime.parse(m['when'] as String),
+              };
             })
         .toList();
   }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+// Telas existentes
 import 'screens/home_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
@@ -6,6 +8,12 @@ import 'screens/devices/devices_screen.dart';
 import 'screens/devices/device_detail_screen.dart';
 import 'screens/history/history_screen.dart';
 import 'screens/admin/admin_screen.dart';
+
+// Telas de integração e diagnóstico MQTT
+import 'screens/mqtt/mqtt_screen.dart';
+import 'screens/mqtt/mqtt_diag_screen.dart';
+
+// Serviços locais
 import 'services/storage.dart';
 import 'services/auth_service.dart';
 
@@ -29,28 +37,28 @@ class AccessaApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      // se logado, começa direto em /devices
+      // Se logado, vai direto à tela de dispositivos
       initialRoute: logged ? '/devices' : '/',
       routes: {
         '/': (_) => const HomeScreen(),
         '/login': (_) => const LoginScreen(),
         '/register': (_) => const RegisterScreen(),
         '/devices': (_) => const DevicesScreen(),
+        '/device_detail': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments;
+          final deviceArgs = (args is Map<String, String>) ? args : <String, String>{};
+          return DeviceDetailScreen(device: deviceArgs);
+        },
         '/history': (_) => const HistoryScreen(),
         '/admin': (_) => const AdminScreen(),
+        '/mqtt': (_) => const MqttScreen(),          // tela de controle MQTT
+        '/mqtt_diag': (_) => const MqttDiagScreen(), // tela de diagnóstico MQTT
       },
-      onGenerateRoute: (settings) {
-        if (settings.name == '/device_detail') {
-          final args = settings.arguments as Map<String, dynamic>? ?? {};
-          return MaterialPageRoute(
-            builder: (_) => DeviceDetailScreen(
-              deviceId: args['deviceId'] ?? 'dev-000',
-              deviceName: args['deviceName'] ?? 'Dispositivo',
-            ),
-          );
-        }
-        return null;
-      },
+      onUnknownRoute: (settings) => MaterialPageRoute(
+        builder: (_) => const Scaffold(
+          body: Center(child: Text('Página não encontrada')),
+        ),
+      ),
     );
   }
 }

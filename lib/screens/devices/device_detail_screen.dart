@@ -1,139 +1,176 @@
-import 'dart:math';
+
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:accessa_mobile/services/history_service.dart';
-import 'package:accessa_mobile/services/auth_service.dart';
-import 'package:accessa_mobile/utils/date_fmt.dart';
+import 'package:mqtt_client/mqtt_client.dart';
+import '../../services/mqtt_service.dart';
+import '../../services/mqtt_config.dart';
 
 class DeviceDetailScreen extends StatefulWidget {
-  final String deviceId;
-  final String deviceName;
-  const DeviceDetailScreen({
-    super.key,
-    required this.deviceId,
-    required this.deviceName,
-  });
+  final Map<String, String> device;
+  const DeviceDetailScreen({super.key, required this.device});
 
   @override
   State<DeviceDetailScreen> createState() => _DeviceDetailScreenState();
 }
 
 class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
-  bool _busy = false;
-  String _lastStatus = '—';
-  int _relaySeconds = 5;
-  bool _buzzerOn = true;
-  String _ledMode = 'Padrão';
+  final mqtt = MqttService();
+  String status = 'Desconhecido';
+  final List<String> log = [];
+  bool loading = false;
+  StreamSubscription? _sub;
 
-  Future<void> _openLock() async {
-    setState(() => _busy = true);
-    await Future.delayed(const Duration(seconds: 1)); // simula request
-    final nowStr = fmtDateTime(DateTime.now());
-    setState(() {
-      _busy = false;
-      _lastStatus = 'Sucesso • $nowStr';
-    });
+  @override
+  void initState() {
+    super.initState();
+    _connect();
+  }
+
+  Future<void> _connect() async {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Solicitação enviada')),
-    );
-    // registra no histórico (persistente)
-    await HistoryService.append({
-      'when': DateTime.now(),
-      'user': AuthService.currentEmail() ?? 'usuário',
-      'device': widget.deviceName,
-      'result': 'sucesso',
-    });
+    setState(() => loading = true);
+    try {
+      await mqtt.connect();
+      final base = '${MqttConfig.baseTopic}/${widget.device["id"]}';
+      await mqtt.subscribe('$base/#');
+      _sub?.cancel();
+      _sub = mqtt.messages.listen(_onMessage);
+      _addLog('✅ Conectado ao HiveMQ Cloud');
+    } catch (e) {
+      _addLog('❌ Falha na conexão: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro MQTT: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
   }
 
-  Future<void> _readDoorSensor() async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    final open = Random().nextBool();
+  void _onMessage(MqttReceivedMessage<MqttMessage> evt) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Sensor: porta ${open ? 'ABERTA' : 'FECHADA'}')),
-    );
+    final topic = evt.topic;
+    final MqttPublishMessage recMess = evt.payload as MqttPublishMessage;
+    final payload = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+    _addLog('📩 [$topic] $payload');
+
+    if (topic.endsWith('/status')) {
+      setState(() => status = payload);
+    } else if (topic.endsWith('/log')) {
+      try {
+        final data = jsonDecode(payload);
+        _addLog('👤 ${data["usuario"]} → ${data["acao"]} (${data["hora"]})');
+      } catch (_) {
+        _addLog('🔍 Log inválido recebido');
+      }
+    }
   }
 
-  void _changeRelayTime() async {
-    final values = [3, 5, 7, 10];
-    final selected = await showMenu<int>(
-      context: context,
-      position: const RelativeRect.fromLTRB(24, 120, 24, 24),
-      items: values
-          .map((v) => PopupMenuItem(value: v, child: Text('Tempo: ${v}s')))
-          .toList(),
-    );
-    if (selected != null) setState(() => _relaySeconds = selected);
+  Future<void> _enviarComando(String comando) async {
+    try {
+      final topic = '${MqttConfig.baseTopic}/${widget.device["id"]}/comando';
+      await mqtt.publishString(topic, comando);
+      _addLog('📤 Enviado: $comando');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Comando enviado: $comando')),
+        );
+      }
+    } catch (e) {
+      _addLog('❌ Falha ao enviar: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Falha ao enviar: $e')),
+        );
+      }
+    }
   }
 
-  void _toggleBuzzer() {
-    setState(() => _buzzerOn = !_buzzerOn);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Buzzer: ${_buzzerOn ? 'ON' : 'OFF'}')),
-    );
+  void _addLog(String msg) {
+    if (!mounted) return;
+    setState(() => log.insert(0, '[${TimeOfDay.now().format(context)}] $msg'));
   }
 
-  void _changeLed() async {
-    final modes = ['Padrão', 'Sucesso', 'Erro', 'Processando'];
-    final selected = await showMenu<String>(
-      context: context,
-      position: const RelativeRect.fromLTRB(24, 160, 24, 24),
-      items: modes
-          .map((m) => PopupMenuItem(value: m, child: Text('LED: $m')))
-          .toList(),
-    );
-    if (selected != null) setState(() => _ledMode = selected);
+  @override
+  void dispose() {
+    _sub?.cancel();
+    mqtt.disconnect();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final device = widget.device;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.deviceName)),
+      appBar: AppBar(
+        title: Text(device['name'] ?? 'Detalhe'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Reconectar',
+            onPressed: loading ? null : _connect,
+          ),
+        ],
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('ID: ${widget.deviceId}'),
-            const SizedBox(height: 8),
-            Text('Última ação: $_lastStatus'),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              icon: _busy
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.lock_open),
-              label: Text(_busy ? 'Enviando...' : 'Abrir'),
-              onPressed: _busy ? null : _openLock,
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: ListTile(
+                leading: const Icon(Icons.door_front_door, size: 40),
+                title: Text(device['name'] ?? 'Dispositivo'),
+                subtitle: Text('Status atual: $status'),
+                trailing: Icon(
+                  status.toLowerCase().contains('aberta')
+                      ? Icons.lock_open
+                      : Icons.lock_outline,
+                  color: status.toLowerCase().contains('aberta')
+                      ? Colors.green
+                      : Colors.red,
+                  size: 30,
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.sensors),
-              label: const Text('Ler sensor da porta'),
-              onPressed: _readDoorSensor,
-            ),
-            const SizedBox(height: 24),
-            const Text('Configurações rápidas'),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                ActionChip(
-                  label: Text('Tempo: ${_relaySeconds}s'),
-                  onPressed: _changeRelayTime,
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.lock_open),
+                  label: const Text('Abrir Porta'),
+                  onPressed: () => _enviarComando('abrir'),
                 ),
-                ActionChip(
-                  label: Text('Buzzer: ${_buzzerOn ? 'ON' : 'OFF'}'),
-                  onPressed: _toggleBuzzer,
-                ),
-                ActionChip(
-                  label: Text('LED: $_ledMode'),
-                  onPressed: _changeLed,
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.lock),
+                  label: const Text('Travar Porta'),
+                  onPressed: () => _enviarComando('travar'),
                 ),
               ],
+            ),
+            const SizedBox(height: 24),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text('📜 Log de Acesso', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ListView.builder(
+                  itemCount: log.length,
+                  itemBuilder: (_, i) => Text(log[i]),
+                ),
+              ),
             ),
           ],
         ),
