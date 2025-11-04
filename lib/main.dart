@@ -14,8 +14,8 @@ import 'screens/mqtt/mqtt_screen.dart';
 import 'screens/mqtt/mqtt_diag_screen.dart';
 
 // Serviços locais
-import 'services/storage.dart';
-import 'services/auth_service.dart';
+import 'data/services/storage.dart';
+import 'data/services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,18 +46,19 @@ class AccessaApp extends StatelessWidget {
         '/devices': (_) => const DevicesScreen(),
         '/device_detail': (context) {
           final args = ModalRoute.of(context)!.settings.arguments;
-          final deviceArgs = (args is Map<String, String>) ? args : <String, String>{};
+          final deviceArgs = (args is Map<String, String>)
+              ? args
+              : <String, String>{};
           return DeviceDetailScreen(device: deviceArgs);
         },
         '/history': (_) => const HistoryScreen(),
         '/admin': (_) => const AdminScreen(),
-        '/mqtt': (_) => const MqttScreen(),          // tela de controle MQTT
+        '/mqtt': (_) => const MqttScreen(), // tela de controle MQTT
         '/mqtt_diag': (_) => const MqttDiagScreen(), // tela de diagnóstico MQTT
       },
       onUnknownRoute: (settings) => MaterialPageRoute(
-        builder: (_) => const Scaffold(
-          body: Center(child: Text('Página não encontrada')),
-        ),
+        builder: (_) =>
+            const Scaffold(body: Center(child: Text('Página não encontrada'))),
       ),
     );
   }

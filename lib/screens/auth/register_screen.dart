@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:accessa_mobile/services/auth_service.dart';
+import 'package:accessa_mobile/data/services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -30,9 +30,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await AuthService.register(_name.text, _email.text, _password.text);
       if (!mounted) return;
       // entra direto no app após cadastro
-      Navigator.of(context).pushNamedAndRemoveUntil('/devices', (route) => false);
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil('/devices', (route) => false);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -53,7 +57,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 labelText: 'Nome completo',
                 prefixIcon: Icon(Icons.person),
               ),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe seu nome' : null,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Informe seu nome' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -66,7 +71,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               validator: (v) {
                 final s = (v ?? '').trim();
                 if (s.isEmpty) return 'Informe seu e-mail';
-                if (!s.contains('@') || !s.contains('.')) return 'E-mail inválido';
+                if (!s.contains('@') || !s.contains('.'))
+                  return 'E-mail inválido';
                 return null;
               },
             ),
@@ -78,12 +84,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 labelText: 'Senha',
                 prefixIcon: Icon(Icons.lock),
               ),
-              validator: (v) => (v == null || v.length < 6) ? 'Mínimo 6 caracteres' : null,
+              validator: (v) =>
+                  (v == null || v.length < 6) ? 'Mínimo 6 caracteres' : null,
             ),
             const SizedBox(height: 20),
             FilledButton.icon(
               icon: _loading
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.check),
               label: Text(_loading ? 'Cadastrando...' : 'Cadastrar'),
               onPressed: _loading ? null : _submit,

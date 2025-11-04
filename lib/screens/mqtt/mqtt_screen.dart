@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 
-import '../../services/mqtt_service.dart';
-import '../../services/mqtt_config.dart';
+import '../../data/services/mqtt_service.dart';
+import '../../data/services/mqtt_config.dart';
 
 class MqttScreen extends StatefulWidget {
   const MqttScreen({super.key});

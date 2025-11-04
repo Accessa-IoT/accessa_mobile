@@ -1,4 +1,4 @@
-import 'package:accessa_mobile/services/storage.dart';
+import 'package:accessa_mobile/data/services/storage.dart';
 
 class AuthService {
   static const _kLogged = 'auth.logged';
@@ -26,7 +26,11 @@ class AuthService {
   }
 
   // Cadastro (com verificação de duplicidade de e-mail)
-  static Future<void> register(String name, String email, String password) async {
+  static Future<void> register(
+    String name,
+    String email,
+    String password,
+  ) async {
     final e = _normalizeEmail(email);
     if (name.trim().isEmpty) {
       throw Exception('Informe seu nome.');
@@ -44,7 +48,11 @@ class AuthService {
       throw Exception('E-mail já cadastrado.');
     }
 
-    users.add({'name': name.trim(), 'email': e, 'password': password}); // DEMO: senha em claro
+    users.add({
+      'name': name.trim(),
+      'email': e,
+      'password': password,
+    }); // DEMO: senha em claro
     await _saveUsers(users);
 
     // auto-login
@@ -53,7 +61,11 @@ class AuthService {
   }
 
   // Login
-  static Future<void> login(String email, String password, {bool remember = true}) async {
+  static Future<void> login(
+    String email,
+    String password, {
+    bool remember = true,
+  }) async {
     final e = _normalizeEmail(email);
     final users = _loadUsers();
 

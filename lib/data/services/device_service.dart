@@ -1,4 +1,4 @@
-import 'package:accessa_mobile/services/storage.dart';
+import 'package:accessa_mobile/data/services/storage.dart';
 
 class DeviceService {
   static const _kDevices = 'devices.items';

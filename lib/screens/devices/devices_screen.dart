@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../services/device_service.dart';
-import '../../services/mqtt_service.dart';
+import '../../data/services/device_service.dart';
+import '../../data/services/mqtt_service.dart';
 
 class DevicesScreen extends StatefulWidget {
   const DevicesScreen({super.key});

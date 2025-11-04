@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 
-import '../../services/mqtt_config.dart';
+import '../../data/services/mqtt_config.dart';
 
 class MqttDiagScreen extends StatefulWidget {
   const MqttDiagScreen({super.key});
@@ -16,9 +16,9 @@ class MqttDiagScreen extends StatefulWidget {
 
 class _MqttDiagScreenState extends State<MqttDiagScreen> {
   String _tlsStatus = 'Aguardando';
-  String _wsStatus  = 'Aguardando';
-  String _tlsError  = '';
-  String _wsError   = '';
+  String _wsStatus = 'Aguardando';
+  String _tlsError = '';
+  String _wsError = '';
   bool _running = false;
 
   Future<void> _run() async {
@@ -26,20 +26,20 @@ class _MqttDiagScreenState extends State<MqttDiagScreen> {
     setState(() {
       _running = true;
       _tlsStatus = 'Testando...';
-      _wsStatus  = 'Testando...';
+      _wsStatus = 'Testando...';
       _tlsError = _wsError = '';
     });
 
     final tls = await _tryConnectTLS();
-    final ws  = await _tryConnectWS();
+    final ws = await _tryConnectWS();
 
     if (!mounted) return;
     setState(() {
       _tlsStatus = tls.$1 ? 'OK' : 'Falhou';
-      _wsStatus  = ws.$1  ? 'OK' : 'Falhou';
-      _tlsError  = tls.$2;
-      _wsError   = ws.$2;
-      _running   = false;
+      _wsStatus = ws.$1 ? 'OK' : 'Falhou';
+      _tlsError = tls.$2;
+      _wsError = ws.$2;
+      _running = false;
     });
   }
 
@@ -56,7 +56,9 @@ class _MqttDiagScreenState extends State<MqttDiagScreen> {
     client.securityContext = SecurityContext.defaultContext;
 
     client.connectionMessage = MqttConnectMessage()
-        .withClientIdentifier('diag_tls_${DateTime.now().millisecondsSinceEpoch}')
+        .withClientIdentifier(
+          'diag_tls_${DateTime.now().millisecondsSinceEpoch}',
+        )
         .authenticateAs(MqttConfig.username, MqttConfig.password)
         .startClean()
         .withWillQos(MqttQos.atLeastOnce);
@@ -89,7 +91,9 @@ class _MqttDiagScreenState extends State<MqttDiagScreen> {
     // via the server URL or package-specific API — remove this line to compile.
 
     client.connectionMessage = MqttConnectMessage()
-        .withClientIdentifier('diag_ws_${DateTime.now().millisecondsSinceEpoch}')
+        .withClientIdentifier(
+          'diag_ws_${DateTime.now().millisecondsSinceEpoch}',
+        )
         .authenticateAs(MqttConfig.username, MqttConfig.password)
         .startClean()
         .withWillQos(MqttQos.atLeastOnce);
@@ -108,14 +112,20 @@ class _MqttDiagScreenState extends State<MqttDiagScreen> {
     final ok = status == 'OK';
     final color = status == 'Testando...'
         ? Colors.amber
-        : ok ? Colors.green : Colors.red;
+        : ok
+        ? Colors.green
+        : Colors.red;
     final icon = status == 'Testando...'
         ? Icons.hourglass_top
-        : ok ? Icons.check_circle : Icons.cancel;
+        : ok
+        ? Icons.check_circle
+        : Icons.cancel;
     return Chip(
       avatar: Icon(icon, color: Colors.white),
-      label: Text('$label: $status',
-          style: const TextStyle(color: Colors.white)),
+      label: Text(
+        '$label: $status',
+        style: const TextStyle(color: Colors.white),
+      ),
       backgroundColor: color,
     );
   }
@@ -126,9 +136,7 @@ class _MqttDiagScreenState extends State<MqttDiagScreen> {
         ? 'Você está no navegador (kIsWeb = true). No app normal usaremos TLS 8883.'
         : 'Você está no desktop/mobile (kIsWeb = false). No navegador usaremos WS 8884.';
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Diagnóstico MQTT'),
-      ),
+      appBar: AppBar(title: const Text('Diagnóstico MQTT')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -161,10 +169,16 @@ class _MqttDiagScreenState extends State<MqttDiagScreen> {
             Expanded(
               child: ListView(
                 children: [
-                  const Text('Detalhes TLS 8883:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Detalhes TLS 8883:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   Text(_tlsError.isEmpty ? '—' : _tlsError),
                   const SizedBox(height: 12),
-                  const Text('Detalhes WS 8884:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Detalhes WS 8884:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   Text(_wsError.isEmpty ? '—' : _wsError),
                 ],
               ),

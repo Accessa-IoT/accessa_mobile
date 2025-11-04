@@ -1,10 +1,9 @@
-
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
-import '../../services/mqtt_service.dart';
-import '../../services/mqtt_config.dart';
+import '../../data/services/mqtt_service.dart';
+import '../../data/services/mqtt_config.dart';
 
 class DeviceDetailScreen extends StatefulWidget {
   final Map<String, String> device;
@@ -40,9 +39,9 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
     } catch (e) {
       _addLog('❌ Falha na conexão: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro MQTT: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro MQTT: $e')));
       }
     } finally {
       if (mounted) setState(() => loading = false);
@@ -53,7 +52,9 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
     if (!mounted) return;
     final topic = evt.topic;
     final MqttPublishMessage recMess = evt.payload as MqttPublishMessage;
-    final payload = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+    final payload = MqttPublishPayload.bytesToStringAsString(
+      recMess.payload.message,
+    );
     _addLog('📩 [$topic] $payload');
 
     if (topic.endsWith('/status')) {
@@ -74,16 +75,16 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
       await mqtt.publishString(topic, comando);
       _addLog('📤 Enviado: $comando');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Comando enviado: $comando')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Comando enviado: $comando')));
       }
     } catch (e) {
       _addLog('❌ Falha ao enviar: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Falha ao enviar: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Falha ao enviar: $e')));
       }
     }
   }
@@ -121,7 +122,9 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
           children: [
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: ListTile(
                 leading: const Icon(Icons.door_front_door, size: 40),
                 title: Text(device['name'] ?? 'Dispositivo'),
@@ -156,7 +159,10 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
             const SizedBox(height: 24),
             const Align(
               alignment: Alignment.centerLeft,
-              child: Text('📜 Log de Acesso', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(
+                '📜 Log de Acesso',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
             const SizedBox(height: 8),
             Expanded(
