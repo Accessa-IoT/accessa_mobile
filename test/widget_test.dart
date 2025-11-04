@@ -8,24 +8,29 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:accessa_mobile/main.dart';
+import 'package:accessa_mobile/data/services/storage.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+    // Prepare a mocked SharedPreferences and initialize Storage used by AuthService
+    SharedPreferences.setMockInitialValues(<String, Object>{'auth.logged': false});
+    await Storage.init();
+
     // Build our app and trigger a frame.
     await tester.pumpWidget(const AccessaApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  // Verify HomeScreen content is shown
+  expect(find.text('Bem-vindo ao Accessa'), findsOneWidget);
+  expect(find.text('Entrar'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  // Tap the 'Entrar' button and wait for navigation to LoginScreen
+  await tester.tap(find.text('Entrar'));
+  await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  // On the login screen we should see the email field label
+  expect(find.text('E-mail'), findsOneWidget);
   });
 }
