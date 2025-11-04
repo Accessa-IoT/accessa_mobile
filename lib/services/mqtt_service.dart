@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io' show SecurityContext, X509Certificate; // ignorado no Web
+import 'dart:io' show SecurityContext;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -9,7 +9,8 @@ import 'mqtt_config.dart';
 /// Serviço MQTT híbrido (Windows/Android/iOS = TLS 8883, Web = WS 8884)
 class MqttService {
   MqttServerClient? _client;
-  final _messageCtrl = StreamController<MqttReceivedMessage<MqttMessage>>.broadcast();
+  final _messageCtrl =
+      StreamController<MqttReceivedMessage<MqttMessage>>.broadcast();
   Stream<MqttReceivedMessage<MqttMessage>> get messages => _messageCtrl.stream;
 
   /// Altere para `true` *apenas para diagnóstico* se houver proxy/antivírus
@@ -67,7 +68,10 @@ class MqttService {
     _client = null;
   }
 
-  Future<void> subscribe(String topic, {MqttQos qos = MqttQos.atLeastOnce}) async {
+  Future<void> subscribe(
+    String topic, {
+    MqttQos qos = MqttQos.atLeastOnce,
+  }) async {
     if (!isConnected) await connect();
     _client?.subscribe(topic, qos);
   }
@@ -76,8 +80,12 @@ class MqttService {
     _client?.unsubscribe(topic);
   }
 
-  Future<void> publishString(String topic, String payload,
-      {MqttQos qos = MqttQos.atLeastOnce, bool retain = false}) async {
+  Future<void> publishString(
+    String topic,
+    String payload, {
+    MqttQos qos = MqttQos.atLeastOnce,
+    bool retain = false,
+  }) async {
     if (!isConnected) await connect();
     final builder = MqttClientPayloadBuilder()..addString(payload);
     _client?.publishMessage(topic, qos, builder.payload!, retain: retain);
