@@ -24,5 +24,16 @@ void main() {
       // Assert
       expect(result, '02/01/2025 - 03:04:05');
     });
+
+    test('preenche o ano sempre com quatro dígitos', () {
+      // Arrange
+      final dt = DateTime(45, 1, 1, 0, 0, 0); // ano 45 d.C.
+
+      // Act
+      final result = fmtDateTime(dt);
+
+      // Assert
+      expect(result, '01/01/0045 - 00:00:00');
+    });
   });
 }
