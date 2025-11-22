@@ -19,7 +19,7 @@ class HistoryService {
   static Future<List<Map<String, dynamic>>> load() async {
     final data = Storage.getJsonList(_kHistory);
     final list = (data ?? _seed());
-    // normaliza DateTime
+
     return list.map((e) {
       final m = Map<String, dynamic>.from(e as Map);
       return {...m, 'when': DateTime.parse(m['when'] as String)};

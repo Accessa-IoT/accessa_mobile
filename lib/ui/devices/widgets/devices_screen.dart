@@ -1,32 +1,29 @@
 import 'package:flutter/material.dart';
 import '../../services/device_service.dart';
 import '../../services/mqtt_service.dart';
+import 'package:provider/provider.dart';
+import 'package:accessa_mobile/ui/devices/view_model/devices_view_model.dart';
 
-class DevicesScreen extends StatefulWidget {
+class DevicesScreen extends StatelessWidget {
   const DevicesScreen({super.key});
 
   @override
-  State<DevicesScreen> createState() => _DevicesScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => DevicesViewModel()..loadDevices(),
+      child: const _DevicesContent(),
+    );
+  }
 }
+//
 
-class _DevicesScreenState extends State<DevicesScreen> {
-  late Future<List<Map<String, String>>> _future;
-  final mqtt = MqttService();
-
-  @override
-  void initState() {
-    super.initState();
-    _future = DeviceService.load();
-  }
-
-  @override
-  void dispose() {
-    mqtt.disconnect();
-    super.dispose();
-  }
+class _DevicesContent extends StatelessWidget {
+  const _DevicesContent();
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<DevicesViewModel>();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dispositivos'),
@@ -56,13 +53,12 @@ class _DevicesScreenState extends State<DevicesScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<Map<String, String>>>(
-        future: _future,
-        builder: (context, snap) {
-          if (!snap.hasData) {
+      body: Builder(
+        builder: (context) {
+          if (vm.loading) {
             return const Center(child: CircularProgressIndicator());
           }
-          final items = snap.data!;
+          final items = vm.devices;
           if (items.isEmpty) {
             return const Center(child: Text('Nenhum dispositivo cadastrado'));
           }

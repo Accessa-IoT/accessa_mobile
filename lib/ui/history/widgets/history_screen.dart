@@ -1,45 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:accessa_mobile/data/services/history_service.dart';
+import 'package:provider/provider.dart';
+import 'package:accessa_mobile/ui/history/view_model/history_view_model.dart';
 import 'package:accessa_mobile/utils/date_fmt.dart';
 
-class HistoryScreen extends StatefulWidget {
+class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
 
   @override
-  State<HistoryScreen> createState() => _HistoryScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => HistoryViewModel()..init(),
+      child: const _HistoryContent(),
+    );
+  }
 }
 
-class _HistoryScreenState extends State<HistoryScreen> {
-  List<Map<String, dynamic>> _items = [];
-
-  // Filtros (inicial)
-  String? _user = 'Hagliberto';
-  String? _device = 'Laboratório 01';
-  String? _result; // qualquer
-
-  bool _loading = true;
+class _HistoryContent extends StatefulWidget {
+  const _HistoryContent();
 
   @override
-  void initState() {
-    super.initState();
-    _reload();
-  }
+  State<_HistoryContent> createState() => _HistoryContentState();
+}
 
-  Future<void> _reload() async {
-    setState(() => _loading = true);
-    final data = await HistoryService.load();
-    if (mounted)
-      setState(() {
-        _items = data;
-        _loading = false;
-      });
-  }
-
-  // ---------- BottomSheet de filtros (compacto, sem nulos no Dropdown) ----------
-  Future<void> _openFilters() async {
-    String u = _user ?? '';
-    String d = _device ?? '';
-    String r = _result ?? '';
+class _HistoryContentState extends State<_HistoryContent> {
+  Future<void> _openFilters(BuildContext context) async {
+    final vm = context.read<HistoryViewModel>();
+    String u = vm.user ?? '';
+    String d = vm.device ?? '';
+    String r = vm.result ?? '';
 
     final Map<String, String>? res =
         await showModalBottomSheet<Map<String, String>>(
@@ -149,23 +137,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
         );
 
     if (res != null && mounted) {
-      setState(() {
-        _user = (res['u'] ?? '').isEmpty ? null : res['u'];
-        _device = (res['d'] ?? '').isEmpty ? null : res['d'];
-        _result = (res['r'] ?? '').isEmpty ? null : res['r'];
-      });
+      vm.setFilters(
+        user: (res['u'] ?? '').isEmpty ? null : res['u'],
+        device: (res['d'] ?? '').isEmpty ? null : res['d'],
+        result: (res['r'] ?? '').isEmpty ? null : res['r'],
+      );
     }
   }
-  // -----------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _items.where((e) {
-      final okUser = _user == null || e['user'] == _user;
-      final okDev = _device == null || e['device'] == _device;
-      final okRes = _result == null || e['result'] == _result;
-      return okUser && okDev && okRes;
-    }).toList();
+    final vm = context.watch<HistoryViewModel>();
+    final filtered = vm.filteredItems;
     final count = filtered.length;
 
     return Scaffold(
@@ -184,37 +167,36 @@ class _HistoryScreenState extends State<HistoryScreen> {
           IconButton(
             tooltip: 'Filtros',
             icon: const Icon(Icons.filter_list),
-            onPressed: _openFilters,
+            onPressed: () => _openFilters(context),
           ),
-          IconButton(onPressed: _reload, icon: const Icon(Icons.refresh)),
+          IconButton(onPressed: vm.reload, icon: const Icon(Icons.refresh)),
         ],
       ),
-      body: _loading
+      body: vm.loading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // Resumo compacto dos filtros ativos
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
                   child: Row(
                     children: [
                       Expanded(
                         child: Text(
-                          'Usuário: ${_user ?? "qualquer"}',
+                          'Usuário: ${vm.user ?? "qualquer"}',
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Dispositivo: ${_device ?? "qualquer"}',
+                          'Dispositivo: ${vm.device ?? "qualquer"}',
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Resultado: ${_result ?? "qualquer"}',
+                          'Resultado: ${vm.result ?? "qualquer"}',
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
