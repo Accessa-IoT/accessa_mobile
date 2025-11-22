@@ -1,13 +1,14 @@
 import 'package:accessa_mobile/data/services/storage.dart';
+import 'package:accessa_mobile/domain/models/user_model.dart';
 
 class AuthService {
   static const _kLogged = 'auth.logged';
-  static const _kEmail = 'auth.email'; // guarda {'email': '...'}
-  static const _kUsers = 'auth.users'; // lista: [{name, email, password}]
+  static const _kEmail = 'auth.email';
+  static const _kUsers = 'auth.users';
 
   static String _normalizeEmail(String email) => email.trim().toLowerCase();
 
-  // Sessão atual
+
   static bool isLoggedIn() => Storage.getBool(_kLogged);
 
   static String? currentEmail() {
@@ -15,17 +16,17 @@ class AuthService {
     return m == null ? null : (m['email'] as String?);
   }
 
-  // Usuários
-  static List<Map<String, dynamic>> _loadUsers() {
+
+  static List<User> _loadUsers() {
     final raw = Storage.getJsonList(_kUsers) ?? [];
-    return raw.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    return raw.map((e) => User.fromJson(Map<String, dynamic>.from(e as Map))).toList();
   }
 
-  static Future<void> _saveUsers(List<Map<String, dynamic>> users) async {
-    await Storage.setJson(_kUsers, users);
+  static Future<void> _saveUsers(List<User> users) async {
+    await Storage.setJson(_kUsers, users.map((u) => u.toJson()).toList());
   }
 
-  // Cadastro (com verificação de duplicidade de e-mail)
+
   static Future<void> register(
     String name,
     String email,
@@ -43,24 +44,24 @@ class AuthService {
     }
 
     final users = _loadUsers();
-    final exists = users.any((u) => (u['email'] as String).toLowerCase() == e);
+    final exists = users.any((u) => u.email.toLowerCase() == e);
     if (exists) {
       throw Exception('E-mail já cadastrado.');
     }
 
-    users.add({
-      'name': name.trim(),
-      'email': e,
-      'password': password,
-    }); // DEMO: senha em claro
+    users.add(User(
+      name: name.trim(),
+      email: e,
+      password: password,
+    ));
     await _saveUsers(users);
 
-    // auto-login
+
     await Storage.setBool(_kLogged, true);
     await Storage.setJson(_kEmail, {'email': e});
   }
 
-  // Login
+
   static Future<void> login(
     String email,
     String password, {
@@ -69,9 +70,9 @@ class AuthService {
     final e = _normalizeEmail(email);
     final users = _loadUsers();
 
-    Map<String, dynamic>? user;
+    User? user;
     for (final u in users) {
-      if ((u['email'] as String).toLowerCase() == e) {
+      if (u.email.toLowerCase() == e) {
         user = u;
         break;
       }
@@ -80,7 +81,7 @@ class AuthService {
     if (user == null) {
       throw Exception('Usuário não encontrado. Crie uma conta.');
     }
-    if ((user['password'] as String) != password) {
+    if (user.password != password) {
       throw Exception('Senha incorreta.');
     }
 
@@ -95,7 +96,7 @@ class AuthService {
   }
 
   static Future<void> forgotPassword(String email) async {
-    // Mock: simula envio de e-mail de recuperação
+
     await Future.delayed(const Duration(milliseconds: 600));
   }
 }

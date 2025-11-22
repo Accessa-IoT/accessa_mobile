@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 
-// Telas existentes
-import 'screens/home_screen.dart';
-import 'screens/auth/login_screen.dart';
-import 'screens/auth/register_screen.dart';
-import 'screens/devices/devices_screen.dart';
-import 'screens/devices/device_detail_screen.dart';
-import 'screens/history/history_screen.dart';
-import 'screens/admin/admin_screen.dart';
+import 'ui/home/widgets/home_screen.dart';
+import 'ui/auth/widgets/login_screen.dart';
+import 'ui/auth/widgets/register_screen.dart';
+import 'ui/devices/widgets/devices_screen.dart';
+import 'ui/devices/widgets/device_detail_screen.dart';
+import 'ui/history/widgets/history_screen.dart';
+import 'ui/admin/widgets/admin_screen.dart';
 
-// Telas de integração e diagnóstico MQTT
-import 'screens/mqtt/mqtt_screen.dart';
-import 'screens/mqtt/mqtt_diag_screen.dart';
+import 'ui/mqtt/widgets/mqtt_screen.dart';
+import 'ui/mqtt/widgets/mqtt_diag_screen.dart';
 
-// Serviços locais
 import 'data/services/storage.dart';
 import 'data/services/auth_service.dart';
 
@@ -37,7 +34,6 @@ class AccessaApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      // Se logado, vai direto à tela de dispositivos
       initialRoute: logged ? '/devices' : '/',
       routes: {
         '/': (_) => const HomeScreen(),
@@ -53,8 +49,8 @@ class AccessaApp extends StatelessWidget {
         },
         '/history': (_) => const HistoryScreen(),
         '/admin': (_) => const AdminScreen(),
-        '/mqtt': (_) => const MqttScreen(), // tela de controle MQTT
-        '/mqtt_diag': (_) => const MqttDiagScreen(), // tela de diagnóstico MQTT
+        '/mqtt': (_) => const MqttScreen(),
+        '/mqtt_diag': (_) => const MqttDiagScreen(),
       },
       onUnknownRoute: (settings) => MaterialPageRoute(
         builder: (_) =>

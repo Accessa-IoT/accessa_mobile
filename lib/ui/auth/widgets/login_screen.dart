@@ -1,20 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:accessa_mobile/data/services/auth_service.dart';
+import 'package:provider/provider.dart';
+import 'package:accessa_mobile/ui/auth/view_model/login_view_model.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => LoginViewModel(),
+      child: const _LoginContent(),
+    );
+  }
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginContent extends StatefulWidget {
+  const _LoginContent();
+
+  @override
+  State<_LoginContent> createState() => _LoginContentState();
+}
+
+class _LoginContentState extends State<_LoginContent> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
-  bool _obscure = true;
-  bool _remember = true;
-  bool _loading = false;
 
   @override
   void dispose() {
@@ -23,30 +33,25 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  void _submit(BuildContext context) {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
-    try {
-      await AuthService.login(
-        _email.text.trim(),
-        _password.text,
-        remember: _remember,
-      );
-      if (!mounted) return;
-      // 🔒 garante que não volta para login/home após autenticado
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil('/devices', (route) => false);
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    
+    final vm = context.read<LoginViewModel>();
+    vm.login(
+      _email.text.trim(),
+      _password.text,
+      onSuccess: () {
+        if (!mounted) return;
+        Navigator.of(context).pushNamedAndRemoveUntil('/devices', (route) => false);
+      },
+      onError: (msg) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      },
+    );
   }
 
-  Future<void> _forgot() async {
+  Future<void> _forgot(BuildContext context) async {
     final ctrl = TextEditingController(text: _email.text.trim());
     final ok = await showDialog<bool>(
       context: context,
@@ -69,17 +74,25 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
     );
-    if (ok == true) {
-      await AuthService.forgotPassword(ctrl.text);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Link de recuperação enviado (demo)')),
+    
+    if (ok == true && mounted) {
+      final vm = context.read<LoginViewModel>();
+      vm.forgotPassword(
+        ctrl.text,
+        onSuccess: () {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Link de recuperação enviado (demo)')),
+          );
+        },
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<LoginViewModel>();
+
     return Scaffold(
       appBar: AppBar(title: const Text('Entrar')),
       body: Form(
@@ -100,15 +113,15 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _password,
-              obscureText: _obscure,
+              obscureText: vm.obscure,
               decoration: InputDecoration(
                 labelText: 'Senha',
                 prefixIcon: const Icon(Icons.lock),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscure ? Icons.visibility : Icons.visibility_off,
+                    vm.obscure ? Icons.visibility : Icons.visibility_off,
                   ),
-                  onPressed: () => setState(() => _obscure = !_obscure),
+                  onPressed: vm.toggleObscure,
                 ),
               ),
               validator: (v) =>
@@ -118,28 +131,28 @@ class _LoginScreenState extends State<LoginScreen> {
             Row(
               children: [
                 Switch(
-                  value: _remember,
-                  onChanged: (v) => setState(() => _remember = v),
+                  value: vm.remember,
+                  onChanged: vm.setRemember,
                 ),
                 const Text('Lembrar de mim'),
                 const Spacer(),
                 TextButton(
-                  onPressed: _forgot,
+                  onPressed: () => _forgot(context),
                   child: const Text('Esqueci a senha'),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
-              icon: _loading
+              icon: vm.loading
                   ? const SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.login),
-              label: Text(_loading ? 'Entrando...' : 'Entrar'),
-              onPressed: _loading ? null : _submit,
+              label: Text(vm.loading ? 'Entrando...' : 'Entrar'),
+              onPressed: vm.loading ? null : () => _submit(context),
             ),
           ],
         ),

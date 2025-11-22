@@ -1,19 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:accessa_mobile/data/services/auth_service.dart';
+import 'package:provider/provider.dart';
+import 'package:accessa_mobile/ui/auth/view_model/register_view_model.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => RegisterViewModel(),
+      child: const _RegisterContent(),
+    );
+  }
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterContent extends StatefulWidget {
+  const _RegisterContent();
+
+  @override
+  State<_RegisterContent> createState() => _RegisterContentState();
+}
+
+class _RegisterContentState extends State<_RegisterContent> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
-  bool _loading = false;
 
   @override
   void dispose() {
@@ -23,27 +35,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  void _submit(BuildContext context) {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
-    try {
-      await AuthService.register(_name.text, _email.text, _password.text);
-      if (!mounted) return;
-      // entra direto no app após cadastro
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil('/devices', (route) => false);
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    
+    final vm = context.read<RegisterViewModel>();
+    vm.register(
+      _name.text,
+      _email.text,
+      _password.text,
+      onSuccess: () {
+        if (!mounted) return;
+        Navigator.of(context).pushNamedAndRemoveUntil('/devices', (route) => false);
+      },
+      onError: (msg) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<RegisterViewModel>();
+
     return Scaffold(
       appBar: AppBar(title: const Text('Criar conta')),
       body: Form(
@@ -89,15 +103,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 20),
             FilledButton.icon(
-              icon: _loading
+              icon: vm.loading
                   ? const SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.check),
-              label: Text(_loading ? 'Cadastrando...' : 'Cadastrar'),
-              onPressed: _loading ? null : _submit,
+              label: Text(vm.loading ? 'Cadastrando...' : 'Cadastrar'),
+              onPressed: vm.loading ? null : () => _submit(context),
             ),
           ],
         ),
