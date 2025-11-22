@@ -15,6 +15,7 @@ class DevicesScreen extends StatelessWidget {
     );
   }
 }
+//
 
 class _DevicesContent extends StatelessWidget {
   const _DevicesContent();
