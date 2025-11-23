@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../services/device_service.dart';
-import '../../services/mqtt_service.dart';
 import 'package:provider/provider.dart';
 import 'package:accessa_mobile/ui/devices/view_model/devices_view_model.dart';
 

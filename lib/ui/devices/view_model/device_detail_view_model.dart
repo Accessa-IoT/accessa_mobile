@@ -6,7 +6,9 @@ import 'package:accessa_mobile/data/services/mqtt_service.dart';
 import 'package:accessa_mobile/data/services/mqtt_config.dart';
 
 class DeviceDetailViewModel extends ChangeNotifier {
-  final MqttService _mqtt = MqttService();
+  final MqttService _mqtt;
+
+  DeviceDetailViewModel({MqttService? mqtt}) : _mqtt = mqtt ?? MqttService();
   String _status = 'Desconhecido';
   final List<String> _log = [];
   bool _loading = false;
@@ -45,7 +47,9 @@ class DeviceDetailViewModel extends ChangeNotifier {
   void _onMessage(MqttReceivedMessage<MqttMessage> evt) {
     final topic = evt.topic;
     final MqttPublishMessage recMess = evt.payload as MqttPublishMessage;
-    final payload = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+    final payload = MqttPublishPayload.bytesToStringAsString(
+      recMess.payload.message,
+    );
     _addLog('📩 [$topic] $payload');
 
     if (topic.endsWith('/status')) {
@@ -61,7 +65,11 @@ class DeviceDetailViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> sendCommand(String command, {required Function(String) onSuccess, required Function(String) onError}) async {
+  Future<void> sendCommand(
+    String command, {
+    required Function(String) onSuccess,
+    required Function(String) onError,
+  }) async {
     if (_deviceId == null) return;
     try {
       final topic = '${MqttConfig.baseTopic}/$_deviceId/comando';
@@ -75,9 +83,9 @@ class DeviceDetailViewModel extends ChangeNotifier {
   }
 
   void _addLog(String msg) {
-
     final now = DateTime.now();
-    final time = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    final time =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
     _log.insert(0, '[$time] $msg');
     notifyListeners();
   }
