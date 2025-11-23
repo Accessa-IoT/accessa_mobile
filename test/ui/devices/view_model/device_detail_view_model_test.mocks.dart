@@ -3,11 +3,12 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i3;
+import 'dart:async' as _i5;
 
-import 'package:accessa_mobile/data/services/mqtt_service.dart' as _i2;
+import 'package:accessa_mobile/data/services/mqtt_service.dart' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mqtt_client/mqtt_client.dart' as _i4;
+import 'package:mqtt_client/mqtt_client.dart' as _i2;
+import 'package:typed_data/typed_data.dart' as _i3;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -23,22 +24,39 @@ import 'package:mqtt_client/mqtt_client.dart' as _i4;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
+class _FakeMqttPublishPayload_0 extends _i1.SmartFake
+    implements _i2.MqttPublishPayload {
+  _FakeMqttPublishPayload_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeMqttPublishMessage_1 extends _i1.SmartFake
+    implements _i2.MqttPublishMessage {
+  _FakeMqttPublishMessage_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeUint8Buffer_2 extends _i1.SmartFake implements _i3.Uint8Buffer {
+  _FakeUint8Buffer_2(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
 /// A class which mocks [MqttService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockMqttService extends _i1.Mock implements _i2.MqttService {
+class MockMqttService extends _i1.Mock implements _i4.MqttService {
   MockMqttService() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Stream<_i4.MqttReceivedMessage<_i4.MqttMessage>> get messages =>
+  _i5.Stream<_i2.MqttReceivedMessage<_i2.MqttMessage>> get messages =>
       (super.noSuchMethod(
             Invocation.getter(#messages),
             returnValue:
-                _i3.Stream<_i4.MqttReceivedMessage<_i4.MqttMessage>>.empty(),
+                _i5.Stream<_i2.MqttReceivedMessage<_i2.MqttMessage>>.empty(),
           )
-          as _i3.Stream<_i4.MqttReceivedMessage<_i4.MqttMessage>>);
+          as _i5.Stream<_i2.MqttReceivedMessage<_i2.MqttMessage>>);
 
   @override
   bool get isConnected =>
@@ -46,49 +64,49 @@ class MockMqttService extends _i1.Mock implements _i2.MqttService {
           as bool);
 
   @override
-  _i3.Future<void> connect() =>
+  _i5.Future<void> connect() =>
       (super.noSuchMethod(
             Invocation.method(#connect, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i5.Future<void>);
 
   @override
-  _i3.Future<void> disconnect() =>
+  _i5.Future<void> disconnect() =>
       (super.noSuchMethod(
             Invocation.method(#disconnect, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i5.Future<void>);
 
   @override
-  _i3.Future<void> subscribe(
+  _i5.Future<void> subscribe(
     String? topic, {
-    _i4.MqttQos? qos = _i4.MqttQos.atLeastOnce,
+    _i2.MqttQos? qos = _i2.MqttQos.atLeastOnce,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#subscribe, [topic], {#qos: qos}),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i5.Future<void>);
 
   @override
-  _i3.Future<void> unsubscribe(String? topic) =>
+  _i5.Future<void> unsubscribe(String? topic) =>
       (super.noSuchMethod(
             Invocation.method(#unsubscribe, [topic]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i5.Future<void>);
 
   @override
-  _i3.Future<void> publishString(
+  _i5.Future<void> publishString(
     String? topic,
     String? payload, {
-    _i4.MqttQos? qos = _i4.MqttQos.atLeastOnce,
+    _i2.MqttQos? qos = _i2.MqttQos.atLeastOnce,
     bool? retain = false,
   }) =>
       (super.noSuchMethod(
@@ -97,8 +115,178 @@ class MockMqttService extends _i1.Mock implements _i2.MqttService {
               [topic, payload],
               {#qos: qos, #retain: retain},
             ),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i5.Future<void>);
+}
+
+/// A class which mocks [MqttPublishMessage].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockMqttPublishMessage extends _i1.Mock
+    implements _i2.MqttPublishMessage {
+  MockMqttPublishMessage() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i2.MqttPublishPayload get payload =>
+      (super.noSuchMethod(
+            Invocation.getter(#payload),
+            returnValue: _FakeMqttPublishPayload_0(
+              this,
+              Invocation.getter(#payload),
+            ),
+          )
+          as _i2.MqttPublishPayload);
+
+  @override
+  set variableHeader(_i2.MqttPublishVariableHeader? _variableHeader) =>
+      super.noSuchMethod(
+        Invocation.setter(#variableHeader, _variableHeader),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  set payload(_i2.MqttPublishPayload? _payload) => super.noSuchMethod(
+    Invocation.setter(#payload, _payload),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set header(_i2.MqttHeader? _header) => super.noSuchMethod(
+    Invocation.setter(#header, _header),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void readFrom(_i2.MqttByteBuffer? messageStream) => super.noSuchMethod(
+    Invocation.method(#readFrom, [messageStream]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void writeTo(_i2.MqttByteBuffer? messageStream) => super.noSuchMethod(
+    Invocation.method(#writeTo, [messageStream]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  _i2.MqttPublishMessage toTopic(String? topicName) =>
+      (super.noSuchMethod(
+            Invocation.method(#toTopic, [topicName]),
+            returnValue: _FakeMqttPublishMessage_1(
+              this,
+              Invocation.method(#toTopic, [topicName]),
+            ),
+          )
+          as _i2.MqttPublishMessage);
+
+  @override
+  _i2.MqttPublishMessage publishData(_i3.Uint8Buffer? data) =>
+      (super.noSuchMethod(
+            Invocation.method(#publishData, [data]),
+            returnValue: _FakeMqttPublishMessage_1(
+              this,
+              Invocation.method(#publishData, [data]),
+            ),
+          )
+          as _i2.MqttPublishMessage);
+
+  @override
+  _i2.MqttPublishMessage withMessageIdentifier(int? messageIdentifier) =>
+      (super.noSuchMethod(
+            Invocation.method(#withMessageIdentifier, [messageIdentifier]),
+            returnValue: _FakeMqttPublishMessage_1(
+              this,
+              Invocation.method(#withMessageIdentifier, [messageIdentifier]),
+            ),
+          )
+          as _i2.MqttPublishMessage);
+
+  @override
+  _i2.MqttPublishMessage withQos(_i2.MqttQos? qos) =>
+      (super.noSuchMethod(
+            Invocation.method(#withQos, [qos]),
+            returnValue: _FakeMqttPublishMessage_1(
+              this,
+              Invocation.method(#withQos, [qos]),
+            ),
+          )
+          as _i2.MqttPublishMessage);
+
+  @override
+  _i2.MqttPublishMessage clearPublishData() =>
+      (super.noSuchMethod(
+            Invocation.method(#clearPublishData, []),
+            returnValue: _FakeMqttPublishMessage_1(
+              this,
+              Invocation.method(#clearPublishData, []),
+            ),
+          )
+          as _i2.MqttPublishMessage);
+
+  @override
+  void setRetain({bool? state}) => super.noSuchMethod(
+    Invocation.method(#setRetain, [], {#state: state}),
+    returnValueForMissingStub: null,
+  );
+}
+
+/// A class which mocks [MqttPublishPayload].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockMqttPublishPayload extends _i1.Mock
+    implements _i2.MqttPublishPayload {
+  MockMqttPublishPayload() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i3.Uint8Buffer get message =>
+      (super.noSuchMethod(
+            Invocation.getter(#message),
+            returnValue: _FakeUint8Buffer_2(this, Invocation.getter(#message)),
+          )
+          as _i3.Uint8Buffer);
+
+  @override
+  set header(_i2.MqttHeader? _header) => super.noSuchMethod(
+    Invocation.setter(#header, _header),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set variableHeader(_i2.MqttPublishVariableHeader? _variableHeader) =>
+      super.noSuchMethod(
+        Invocation.setter(#variableHeader, _variableHeader),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  set message(_i3.Uint8Buffer? _message) => super.noSuchMethod(
+    Invocation.setter(#message, _message),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void readFrom(_i2.MqttByteBuffer? payloadStream) => super.noSuchMethod(
+    Invocation.method(#readFrom, [payloadStream]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void writeTo(_i2.MqttByteBuffer? payloadStream) => super.noSuchMethod(
+    Invocation.method(#writeTo, [payloadStream]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  int getWriteLength() =>
+      (super.noSuchMethod(
+            Invocation.method(#getWriteLength, []),
+            returnValue: 0,
+          )
+          as int);
 }

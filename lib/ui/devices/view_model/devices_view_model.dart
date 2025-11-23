@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:accessa_mobile/data/services/device_service.dart';
 
+typedef DeviceLoader = Future<List<Map<String, String>>> Function();
+
 class DevicesViewModel extends ChangeNotifier {
+  final DeviceLoader _loader;
+
+  DevicesViewModel({DeviceLoader? loader})
+    : _loader = loader ?? DeviceService.load;
+
   List<Map<String, String>> _devices = [];
   bool _loading = false;
 
@@ -13,9 +20,9 @@ class DevicesViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _devices = await DeviceService.load();
+      _devices = await _loader();
     } catch (e) {
-
+      _devices = [];
     } finally {
       _loading = false;
       notifyListeners();

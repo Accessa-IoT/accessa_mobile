@@ -27,5 +27,17 @@ void main() {
       expect(vm.devices, isNotEmpty);
       expect(vm.devices.length, 3); // Default devices
     });
+
+    test('loadDevices handles error gracefully', () async {
+      // Arrange
+      vm = DevicesViewModel(loader: () async => throw Exception('Load failed'));
+
+      // Act
+      await vm.loadDevices();
+
+      // Assert
+      expect(vm.loading, isFalse);
+      expect(vm.devices, isEmpty);
+    });
   });
 }

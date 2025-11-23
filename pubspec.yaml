@@ -29,6 +29,7 @@ dev_dependencies:
   test: ^1.26.2
   mockito: ^5.4.4
   build_runner: ^2.4.8
+  typed_data: ^1.4.0
 
 flutter:
 
