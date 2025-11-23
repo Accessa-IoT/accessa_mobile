@@ -77,5 +77,14 @@ void main() {
       expect(errorMessage, contains('Usuário não encontrado'));
       expect(vm.loading, isFalse);
     });
+
+    test('forgotPassword calls onSuccess', () async {
+      bool successCalled = false;
+      await vm.forgotPassword(
+        'test@example.com',
+        onSuccess: () => successCalled = true,
+      );
+      expect(successCalled, isTrue);
+    });
   });
 }
