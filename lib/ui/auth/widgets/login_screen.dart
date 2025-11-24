@@ -35,18 +35,22 @@ class _LoginContentState extends State<_LoginContent> {
 
   void _submit(BuildContext context) {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final vm = context.read<LoginViewModel>();
     vm.login(
       _email.text.trim(),
       _password.text,
       onSuccess: () {
         if (!mounted) return;
-        Navigator.of(context).pushNamedAndRemoveUntil('/devices', (route) => false);
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/devices', (route) => false);
       },
       onError: (msg) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
       },
     );
   }
@@ -74,7 +78,7 @@ class _LoginContentState extends State<_LoginContent> {
         ],
       ),
     );
-    
+
     if (ok == true && mounted) {
       final vm = context.read<LoginViewModel>();
       vm.forgotPassword(
@@ -101,6 +105,7 @@ class _LoginContentState extends State<_LoginContent> {
           padding: const EdgeInsets.all(24),
           children: [
             TextFormField(
+              key: const Key('email_field'),
               controller: _email,
               keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
@@ -112,6 +117,7 @@ class _LoginContentState extends State<_LoginContent> {
             ),
             const SizedBox(height: 12),
             TextFormField(
+              key: const Key('password_field'),
               controller: _password,
               obscureText: vm.obscure,
               decoration: InputDecoration(
@@ -131,12 +137,14 @@ class _LoginContentState extends State<_LoginContent> {
             Row(
               children: [
                 Switch(
+                  key: const Key('remember_switch'),
                   value: vm.remember,
                   onChanged: vm.setRemember,
                 ),
                 const Text('Lembrar de mim'),
                 const Spacer(),
                 TextButton(
+                  key: const Key('forgot_password_button'),
                   onPressed: () => _forgot(context),
                   child: const Text('Esqueci a senha'),
                 ),
@@ -144,6 +152,7 @@ class _LoginContentState extends State<_LoginContent> {
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
+              key: const Key('login_button'),
               icon: vm.loading
                   ? const SizedBox(
                       width: 18,

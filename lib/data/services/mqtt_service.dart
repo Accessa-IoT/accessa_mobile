@@ -8,11 +8,16 @@ import 'mqtt_config.dart';
 
 class MqttService {
   MqttServerClient? _client;
+  final MqttServerClient Function()? _clientFactory;
+  final bool acceptBadCerts;
   final _messageCtrl =
       StreamController<MqttReceivedMessage<MqttMessage>>.broadcast();
   Stream<MqttReceivedMessage<MqttMessage>> get messages => _messageCtrl.stream;
 
-  static const bool acceptBadCerts = false;
+  MqttService({
+    MqttServerClient Function()? clientFactory,
+    this.acceptBadCerts = false,
+  }) : _clientFactory = clientFactory;
 
   bool get isConnected =>
       _client?.connectionStatus?.state == MqttConnectionState.connected;
@@ -20,7 +25,9 @@ class MqttService {
   Future<void> connect() async {
     if (isConnected) return;
 
-    final client = kIsWeb ? _buildWsClient() : _buildTlsClient();
+    final client = _clientFactory != null
+        ? _clientFactory!()
+        : (kIsWeb ? _buildWsClient() : _buildTlsClient());
 
     client.onConnected = () {};
     client.onDisconnected = () {};
@@ -42,8 +49,9 @@ class MqttService {
       _client = null;
 
       if (!kIsWeb) {
-
-        final fb = _buildWsClient();
+        final fb = _clientFactory != null
+            ? _clientFactory!()
+            : _buildWsClient();
         try {
           await fb.connect(MqttConfig.username, MqttConfig.password);
           _client = fb;
@@ -85,8 +93,6 @@ class MqttService {
     final builder = MqttClientPayloadBuilder()..addString(payload);
     _client?.publishMessage(topic, qos, builder.payload!, retain: retain);
   }
-
-
 
   MqttServerClient _buildTlsClient() {
     final client = MqttServerClient.withPort(

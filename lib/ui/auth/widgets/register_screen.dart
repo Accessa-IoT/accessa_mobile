@@ -37,7 +37,7 @@ class _RegisterContentState extends State<_RegisterContent> {
 
   void _submit(BuildContext context) {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final vm = context.read<RegisterViewModel>();
     vm.register(
       _name.text,
@@ -45,11 +45,15 @@ class _RegisterContentState extends State<_RegisterContent> {
       _password.text,
       onSuccess: () {
         if (!mounted) return;
-        Navigator.of(context).pushNamedAndRemoveUntil('/devices', (route) => false);
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/devices', (route) => false);
       },
       onError: (msg) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
       },
     );
   }
@@ -66,6 +70,7 @@ class _RegisterContentState extends State<_RegisterContent> {
           padding: const EdgeInsets.all(24),
           children: [
             TextFormField(
+              key: const Key('name_field'),
               controller: _name,
               decoration: const InputDecoration(
                 labelText: 'Nome completo',
@@ -76,6 +81,7 @@ class _RegisterContentState extends State<_RegisterContent> {
             ),
             const SizedBox(height: 12),
             TextFormField(
+              key: const Key('email_field'),
               controller: _email,
               keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
@@ -92,6 +98,7 @@ class _RegisterContentState extends State<_RegisterContent> {
             ),
             const SizedBox(height: 12),
             TextFormField(
+              key: const Key('password_field'),
               controller: _password,
               obscureText: true,
               decoration: const InputDecoration(
@@ -103,6 +110,7 @@ class _RegisterContentState extends State<_RegisterContent> {
             ),
             const SizedBox(height: 20),
             FilledButton.icon(
+              key: const Key('register_button'),
               icon: vm.loading
                   ? const SizedBox(
                       width: 18,

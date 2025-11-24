@@ -9,7 +9,6 @@ import 'package:accessa_mobile/data/services/auth_service.dart';
 void main() {
   group('AuthService', () {
     setUp(() async {
-      // start each test with a fresh mocked SharedPreferences
       SharedPreferences.setMockInitialValues(<String, Object>{});
       await Storage.init();
     });
@@ -29,10 +28,11 @@ void main() {
 
     test('register throws on duplicate email', () async {
       final existing = [
-        {'name': 'Bob', 'email': 'bob@example.com', 'password': 'pass123'}
+        {'name': 'Bob', 'email': 'bob@example.com', 'password': 'pass123'},
       ];
-      SharedPreferences.setMockInitialValues(
-          {'auth.users': jsonEncode(existing)});
+      SharedPreferences.setMockInitialValues({
+        'auth.users': jsonEncode(existing),
+      });
       await Storage.init();
 
       expect(() async {
@@ -40,23 +40,26 @@ void main() {
       }, throwsA(isA<Exception>()));
     });
 
-    test('register validations: empty name / invalid email / short password', () async {
-      expect(() async {
-        await AuthService.register('', 'a@b.com', 'secret');
-      }, throwsA(isA<Exception>()));
+    test(
+      'register validations: empty name / invalid email / short password',
+      () async {
+        expect(() async {
+          await AuthService.register('', 'a@b.com', 'secret');
+        }, throwsA(isA<Exception>()));
 
-      expect(() async {
-        await AuthService.register('Name', 'invalid-email', 'secret');
-      }, throwsA(isA<Exception>()));
+        expect(() async {
+          await AuthService.register('Name', 'invalid-email', 'secret');
+        }, throwsA(isA<Exception>()));
 
-      expect(() async {
-        await AuthService.register('Name', 'n@example.com', '123');
-      }, throwsA(isA<Exception>()));
-    });
+        expect(() async {
+          await AuthService.register('Name', 'n@example.com', '123');
+        }, throwsA(isA<Exception>()));
+      },
+    );
 
     test('login success stores logged and email when remember=true', () async {
       final users = [
-        {'name': 'Carol', 'email': 'carol@example.com', 'password': 'pwd1234'}
+        {'name': 'Carol', 'email': 'carol@example.com', 'password': 'pwd1234'},
       ];
       SharedPreferences.setMockInitialValues({'auth.users': jsonEncode(users)});
       await Storage.init();
@@ -67,14 +70,12 @@ void main() {
     });
 
     test('login throws when user not found or wrong password', () async {
-      // no users
       expect(() async {
         await AuthService.login('noone@example.com', 'x');
       }, throwsA(isA<Exception>()));
 
-      // wrong password
       final users = [
-        {'name': 'Dan', 'email': 'dan@example.com', 'password': 'rightpass'}
+        {'name': 'Dan', 'email': 'dan@example.com', 'password': 'rightpass'},
       ];
       SharedPreferences.setMockInitialValues({'auth.users': jsonEncode(users)});
       await Storage.init();

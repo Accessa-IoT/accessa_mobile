@@ -51,6 +51,7 @@ class _HistoryContentState extends State<_HistoryContent> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
+                    key: const Key('filter_user_dropdown'),
                     value: u,
                     items: const [
                       DropdownMenuItem<String>(
@@ -71,6 +72,7 @@ class _HistoryContentState extends State<_HistoryContent> {
                   ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
+                    key: const Key('filter_device_dropdown'),
                     value: d,
                     items: const [
                       DropdownMenuItem<String>(
@@ -91,6 +93,7 @@ class _HistoryContentState extends State<_HistoryContent> {
                   ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
+                    key: const Key('filter_result_dropdown'),
                     value: r,
                     items: const [
                       DropdownMenuItem<String>(
@@ -113,6 +116,7 @@ class _HistoryContentState extends State<_HistoryContent> {
                   Row(
                     children: [
                       TextButton(
+                        key: const Key('filter_clear_button'),
                         onPressed: () => Navigator.pop<Map<String, String>>(
                           context,
                           {'u': '', 'd': '', 'r': ''},
@@ -121,6 +125,7 @@ class _HistoryContentState extends State<_HistoryContent> {
                       ),
                       const Spacer(),
                       FilledButton.icon(
+                        key: const Key('filter_apply_button'),
                         icon: const Icon(Icons.check),
                         label: const Text('Aplicar'),
                         onPressed: () => Navigator.pop<Map<String, String>>(
@@ -165,11 +170,16 @@ class _HistoryContentState extends State<_HistoryContent> {
             ),
           ),
           IconButton(
+            key: const Key('filter_button'),
             tooltip: 'Filtros',
             icon: const Icon(Icons.filter_list),
             onPressed: () => _openFilters(context),
           ),
-          IconButton(onPressed: vm.reload, icon: const Icon(Icons.refresh)),
+          IconButton(
+            key: const Key('refresh_button'),
+            onPressed: vm.reload,
+            icon: const Icon(Icons.refresh),
+          ),
         ],
       ),
       body: vm.loading
