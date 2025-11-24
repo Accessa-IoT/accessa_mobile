@@ -4,12 +4,15 @@ import 'package:accessa_mobile/ui/devices/view_model/device_detail_view_model.da
 
 class DeviceDetailScreen extends StatelessWidget {
   final Map<String, String> device;
-  const DeviceDetailScreen({super.key, required this.device});
+  final DeviceDetailViewModel? viewModel;
+
+  const DeviceDetailScreen({super.key, required this.device, this.viewModel});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => DeviceDetailViewModel()..init(device["id"]!),
+      create: (_) =>
+          viewModel ?? (DeviceDetailViewModel()..init(device["id"]!)),
       child: _DeviceDetailContent(device: device),
     );
   }
@@ -24,10 +27,14 @@ class _DeviceDetailContent extends StatelessWidget {
     vm.sendCommand(
       comando,
       onSuccess: (msg) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
       },
       onError: (msg) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
       },
     );
   }
